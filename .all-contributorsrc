@@ -1,0 +1,25 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "jianm-xs",
+      "name": "jianm-xs",
+      "avatar_url": "https://avatars.githubusercontent.com/u/69761545?v=4",
+      "profile": "https://github.com/jianm-xs",
+      "contributions": [
+        "doc",
+        "tutorial"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "Tiktok",
+  "projectOwner": "jianm-xs",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}
