@@ -14,6 +14,16 @@
         "doc",
         "tutorial"
       ]
+    },
+    {
+      "login": "LuWiHan",
+      "name": "LuWiHan",
+      "avatar_url": "https://avatars.githubusercontent.com/u/96118540?v=4",
+      "profile": "https://github.com/LuWiHan",
+      "contributions": [
+        "doc",
+        "design"
+      ]
     }
   ],
   "contributorsPerLine": 7,
