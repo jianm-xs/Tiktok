@@ -1,3 +1,7 @@
+// feed 包，该包封装了用户相关的接口
+// 创建人：龚江炜
+// 创建时间：2022-5-14
+
 package controller
 
 import (
