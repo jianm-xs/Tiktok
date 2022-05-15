@@ -23,9 +23,9 @@ type Video struct {
 
 // User 用户对象，定义了用户的基本信息
 type User struct {
-	Id            int64  `json:"id"`            // 用户 ID
-	Name          string `json:"name"`          // 用户名
-	FollowCount   int64  `json:"follow_count"`  // 用户的关注总数
-	FollowerCount int64  `json:"follower_cont"` // 用户的粉丝总数
-	IsFollow      bool   `json:"is_follow"`     // 当前登录用户是否关注了该用户
+	Id            int64  `json:"id"`             // 用户 ID
+	Name          string `json:"name"`           // 用户名
+	FollowCount   int64  `json:"follow_count"`   // 用户的关注总数
+	FollowerCount int64  `json:"follower_count"` // 用户的粉丝总数
+	IsFollow      bool   `json:"is_follow"`      // 当前登录用户是否关注了该用户
 }
