@@ -7,6 +7,8 @@
 ### 项目功能
     待完善...
 
+### 如果要参与贡献，请仔细阅读 `贡献文档.md`。
+
 ## Contributors ✨
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
