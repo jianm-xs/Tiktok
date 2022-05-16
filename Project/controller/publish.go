@@ -34,28 +34,3 @@ func Publish(context *gin.Context) {
 		StatusMsg:  "success",
 	})
 }
-
-// PublishList 登录用户的视频发布列表，直接列出用户所有投稿过的视频
-func PublishList(context *gin.Context) {
-	var request models.PublishListQuery
-	if err := context.ShouldBindQuery(&request); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	_ = request.Token
-	// TODO: JWT auth.
-
-	videoList, err := dao.GetPublishListByUserId(request.UserID)
-	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	context.JSON(http.StatusOK, &models.Response{
-		StatusCode: common.StatusOK,
-		StatusMsg:  "success",
-		Data: &models.PublishListResponse{
-			VideoList: &videoList,
-		},
-	})
-}

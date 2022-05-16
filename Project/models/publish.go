@@ -18,17 +18,6 @@ type Video struct {
 	IsFavorite    bool   `gorm:"column:is_favorite" json:"IsFavorite"`            // 是否已点赞
 }
 
-// PublishListQuery 发布列表 uri 请求格式
-type PublishListQuery struct {
-	UserID int64  `form:"user_id" json:"UserID"` // 用户id
-	Token  string `form:"token" json:"Token"`    // 鉴权token
-}
-
-// PublishListResponse 发布列表响应格式
-type PublishListResponse struct {
-	VideoList *[]Video `json:"VideoList"` // 发布列表
-}
-
 // PublishVideoRequest 投稿视频请求格式
 type PublishVideoRequest struct {
 	UserID int64  `json:"UserID"`
