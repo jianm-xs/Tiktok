@@ -8,13 +8,6 @@ import (
 	"Project/models"
 )
 
-func GetPublishListByUserId(userID int64) ([]models.Video, error) {
-	var videos []models.Video
-	err := DB.Debug().Preload("Author").Where(
-		"author_id = ?", userID).Find(&videos).Error
-	return videos, err
-}
-
 func CreateVideoByUserId(userID int64, data models.Video) error {
 	video := models.Video{
 		AuthorID: userID,
