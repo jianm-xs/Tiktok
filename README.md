@@ -1,12 +1,13 @@
-### 青训营——可能不太队
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)![GitHub closed pull requests](https://img.shields.io/github/issues-pr-closed/jianm-xs/Tiktok?color=brightgreen)![GitHub closed issues](https://img.shields.io/github/issues-closed/jianm-xs/Tiktok?color=brightgreen)![GitHub forks](https://img.shields.io/github/forks/jianm-xs/Tiktok?color=cyan)![GitHub watchers](https://img.shields.io/github/watchers/jianm-xs/Tiktok?color=cyan)![GitHub go.mod Go version (branch & subdirectory of monorepo)](https://img.shields.io/github/go-mod/go-version/jianm-xs/Tiktok/main?color=blue&filename=Project%2Fgo.mod)
 
-## 项目名称
+## 青训营——可能不太队
+
+### 项目名称
     抖音精简版
-#### 项目功能
+### 项目功能
     待完善...
+
+### 如果要参与贡献，请仔细阅读 `贡献文档.md`。
 
 ## Contributors ✨
 
@@ -15,6 +16,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable -->
+
 <table>
   <tr>
     <td align="center"><a href="https://github.com/jianm-xs"><img src="https://avatars.githubusercontent.com/u/69761545?v=4?s=100" width="100px;" alt=""/><br /><sub><b>jianm-xs</b></sub></a><br /><a href="https://github.com/jianm-xs/Tiktok/commits?author=jianm-xs" title="Documentation">📖</a> <a href="#tutorial-jianm-xs" title="Tutorials">✅</a> <a href="#business-jianm-xs" title="Business development">💼</a> <a href="https://github.com/jianm-xs/Tiktok/commits?author=jianm-xs" title="Code">💻</a> <a href="#projectManagement-jianm-xs" title="Project Management">📆</a></td>
