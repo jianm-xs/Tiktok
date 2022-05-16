@@ -24,7 +24,7 @@ type FeedResponse struct {
 
 func Feed(c *gin.Context) {
 	var result FeedResponse                                         // 结果
-	db, _ := sql.Open("mysql", "root:root@(localhost:3306)/tiktok") // 设置参数
+	db, _ := sql.Open("mysql", "root:root@(localhost:3306)/Tiktok") // 设置参数
 	defer func(db *sql.DB) {
 		err := db.Close()
 		if err != nil {
@@ -50,7 +50,7 @@ func Feed(c *gin.Context) {
 	// 预计完善时间：数据库创建完成后完善
 	queryCommand := "SELECT video_id, video.user_id, name, play_url, cover_url FROM video, `user` WHERE video.user_id = `user`.user_id;" // 查询语句
 	answer, _ := db.Query(queryCommand)                                                                                                  // 执行查询语句
-	//var videos []Video
+
 	for answer.Next() {
 		var video Video
 		err := answer.Scan(&video.Id, &video.Author.Id, &video.Author.Name, &video.PlayUrl, &video.CoverUrl) // 获取查询结果
