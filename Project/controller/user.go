@@ -21,15 +21,18 @@ import (
 // jwt包自带的jwt.StandardClaims只包含了官方字段
 // 这里额外记录username、password两字段，所以要自定义结构体
 // 如果想要保存更多信息，都可以添加到这个结构体中
+
 type MyClaims struct {
 	Uid string `json:"uid" :"uid"` //用户id
 	jwt.StandardClaims
 }
 
-//密钥
+// 密钥
+
 var MySecret = []byte("密钥")
 
 //生成 Token
+
 func GenToken(uid string) (string, error) {
 	// 创建一个我们自己的声明
 	c := MyClaims{
@@ -46,6 +49,7 @@ func GenToken(uid string) (string, error) {
 }
 
 // 解析 Token
+
 func ParseToken(tokenStr string) (*MyClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, &MyClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return MySecret, nil
@@ -61,6 +65,7 @@ func ParseToken(tokenStr string) (*MyClaims, error) {
 }
 
 //校验 token
+
 func CheckJwtAuth(tokenStr string) (bool, error) {
 	//解析Token
 	claims, err := ParseToken(tokenStr)
@@ -74,6 +79,7 @@ func CheckJwtAuth(tokenStr string) (bool, error) {
 }
 
 // 刷新 Token
+
 func RefreshToken(tokenStr string) (string, error) {
 	jwt.TimeFunc = func() time.Time {
 		return time.Unix(0, 0)
@@ -90,15 +96,15 @@ func RefreshToken(tokenStr string) (string, error) {
 		claims.StandardClaims.ExpiresAt = jwt.At(time.Now().Add(time.Minute * 10))
 		return GenToken(claims.Uid)
 	}
-	return "", errors.New("Couldn't handle this token")
+	return "", errors.New("couldn't handle this token")
 }
 
 //*****************************************************************************************************
 
 type UserLoginResponse struct {
 	models.Response        // 状态码、状态描述
-	UserId   int64  `json:"user_id,omitempty"` // 用户id
-	Token    string `json:"token"`             // 鉴权
+	UserId          int64  `json:"user_id,omitempty"` // 用户id
+	Token           string `json:"token"`             // 鉴权
 }
 
 // Login 用户登录接口
@@ -109,7 +115,7 @@ func Login(c *gin.Context) {
 	userName := c.Query("username")
 	userPassword := c.Query("password")
 
-	//数据库连接P
+	//数据库连接
 	db, _ := sql.Open("mysql", "root:root@tcp(81.70.17.190:3306)/Tiktok")
 	defer func(db *sql.DB) {
 		err := db.Close()
