@@ -41,6 +41,7 @@ type VideoListResponse struct {
 	Response
 	VideoList []Video `json:"video_list"`
 }
+
 type VideoVo struct {
 	Id            int64  `json:"id" db:"id"`                          // 视频 ID
 	UserId        int64  `json:"user_id" db:"user_id"`                // userId
