@@ -13,7 +13,7 @@ var MysqlCfg = mysqlConfig{
 	Url:      "127.0.0.1",
 	UserName: "root",
 	Password: "root",
-	DBName:   "gorm_test",
+	DBName:   "Tiktok",
 	Port:     "3306",
 	CharSet:  "utf8mb4",
 }
