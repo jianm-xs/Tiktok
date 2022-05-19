@@ -5,26 +5,20 @@
 package controller
 
 import (
+	"Project/models"
 	"database/sql"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"net/http"
 )
 
-// FeedResponse 视频流接口响应对象，定义了视频流响应的基本内容
-type FeedResponse struct {
-	Response          // 状态码、状态描述
-	NextTime  int64   `json:"next_time,omitempty"` // 本次返回的视频中，发布最早的时间。可以为空
-	VideoList []Video `json:"video_list"`          // 本次返回的视频列表。可以为空
-}
-
 // Feed : 视频流接口，用于请求视频列表
 // 参数 :
 //      c : 返回的信息（状态和视频列表）
 
 func Feed(c *gin.Context) {
-	var result FeedResponse                                         // 结果
-	db, _ := sql.Open("mysql", "root:root@(localhost:3306)/Tiktok") // 设置参数
+	var result models.FeedResponse                                  // 结果
+	db, _ := sql.Open("mysql", "root:root@(127.0.0.1:3306)/Tiktok") // 设置参数
 	defer func(db *sql.DB) {
 		err := db.Close()
 		if err != nil {
@@ -52,7 +46,7 @@ func Feed(c *gin.Context) {
 	answer, _ := db.Query(queryCommand)                                                                                                  // 执行查询语句
 
 	for answer.Next() {
-		var video Video
+		var video models.Video
 		err := answer.Scan(&video.Id, &video.Author.Id, &video.Author.Name, &video.PlayUrl, &video.CoverUrl) // 获取查询结果
 		if err != nil {                                                                                      // 读取失败处理
 			result.Response.StatusCode = -3

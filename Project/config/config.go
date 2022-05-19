@@ -10,7 +10,7 @@ type mysqlConfig struct {
 }
 
 var MysqlCfg = mysqlConfig{
-	Url:      "81.70.17.190",
+	Url:      "127.0.0.1",
 	UserName: "root",
 	Password: "root",
 	DBName:   "gorm_test",

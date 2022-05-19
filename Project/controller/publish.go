@@ -37,11 +37,6 @@ func Publish(context *gin.Context) {
 	})
 }
 
-type VideoListResponse struct {
-	Response
-	VideoList []Video `json:"video_list"`
-}
-
 type VideoVo struct {
 	Id            int64  `json:"id" db:"id"`                          // 视频 ID
 	UserId        int64  `json:"user_id" db:"user_id"`                // userId
@@ -54,32 +49,32 @@ type VideoVo struct {
 
 var Db *sqlx.DB
 
-func getUserVideoInfoByToken(token string) []Video {
+func getUserVideoInfoByToken(token string) []models.Video {
 
 	database, err := sqlx.Open("mysql", "root:root@tcp(110.42.225.78:3306)/test")
 	if err != nil {
 		fmt.Println("连接数据库失败：" + err.Error())
-		return []Video{}
+		return []models.Video{}
 	}
 	Db = database
-	var videos []Video
+	var videos []models.Video
 	var videoVos []VideoVo
-	var user []User
+	var user []models.User
 
 	err = Db.Select(&videoVos, "select * from video where user_id=?", 1)
 	if err != nil {
 		fmt.Println("exec failed, ", err)
-		return []Video{}
+		return []models.Video{}
 	}
 	err = Db.Select(&user, "select * from user where id=?", 1)
 	if err != nil {
 		fmt.Println("exec failed, ", err)
-		return []Video{}
+		return []models.Video{}
 	}
 
 	defer Db.Close()
 	for _, v := range videoVos {
-		t := Video{
+		t := models.Video{
 			Id:            v.Id,
 			Author:        user[0],
 			PlayUrl:       v.PlayUrl,
@@ -111,8 +106,8 @@ func PublishList(c *gin.Context) {
 	//}
 	videos := getUserVideoInfoByToken(token)
 
-	c.JSON(http.StatusOK, VideoListResponse{
-		Response: Response{
+	c.JSON(http.StatusOK, models.VideoListResponse{
+		Response: models.Response{
 			StatusCode: 0,
 		},
 		VideoList: videos,
