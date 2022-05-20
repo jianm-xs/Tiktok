@@ -66,14 +66,16 @@ func ParseToken(tokenStr string) (*MyClaims, error) {
 
 //校验 token
 
-func CheckJwtAuth(tokenStr string) (bool, error) {
+func CheckToken(tokenStr string, uid string) (bool, error) {
 	//解析Token
 	claims, err := ParseToken(tokenStr)
 
 	// 可加相对应的验证逻辑
 	if err == nil {
-		fmt.Println("Uid :", claims.Uid)
-		return true, nil
+		//用户请求中的uid与解析token出来的uid进行比较，相等就验证成功
+		if uid == claims.Uid {
+			return true, nil
+		}
 	}
 	return false, err
 }
@@ -225,8 +227,8 @@ func Register(c *gin.Context) {
 		fmt.Println("error:", err)
 	}
 	for ans.Next() {
-
-		err := ans.Scan(&name) //获取查询结果
+		//获取查询结果
+		err := ans.Scan(&name)
 		if err != nil {
 			result.Response.StatusCode = -3
 			result.Response.StatusMsg = "Read username error!"
@@ -236,7 +238,8 @@ func Register(c *gin.Context) {
 			return
 		}
 	}
-	if name == username { //username已经存在
+	//username已经存在
+	if name == username {
 		result.Response.StatusCode = -4
 		result.Response.StatusMsg = "username had exist!"
 		result.UserId = -1
@@ -247,7 +250,7 @@ func Register(c *gin.Context) {
 	//使用bcrypt对密码加密
 	pd, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	//在数据库中创建用户数据
-	ret, err := db.Exec("insert into user (name,password,created_time,is_deleted) values(?,?,?,?)", username, pd, time.Now(), 0)
+	ret, err := db.Exec("insert into user (name,password,follow_count,follower_count,create_time,update_time) values(?,?,0,0,?,?)", username, pd, time.Now(), time.Now())
 	if err != nil {
 		fmt.Println("error:", err)
 		result.Response.StatusCode = -5
