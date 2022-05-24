@@ -5,6 +5,7 @@
 package controller
 
 import (
+	"Project/dao"
 	"Project/models"
 	"database/sql"
 	"errors"
@@ -282,42 +283,16 @@ func Register(c *gin.Context) {
 // UserInfo 获取登录用户的 id、昵称等
 func UserInfo(c *gin.Context) {
 	var result models.UserInfoResponse // 结果
-	selectId := c.Query("user_id")     // 获取请求的 user_id
-	// 待用，token 还未完善
-	//selectToken := c.DefaultPostForm("token", "-1")
-	db, _ := sql.Open("mysql", "root:root@(127.0.0.1:3306)/Tiktok") // 设置参数
-	defer func(db *sql.DB) {
-		err := db.Close()
-		if err != nil {
-			result.Response.StatusCode = -1 // 更改状态码
-			result.Response.StatusMsg = "Close database error!"
-			c.JSON(http.StatusOK, result) // 设置返回的信息
-			return
-		}
-	}(db) // 使用完毕后关闭数据库
-	err := db.Ping() // 连接数据库
-	if err != nil {  // 连接失败处理
-		result.Response.StatusCode = -2
-		result.Response.StatusMsg = "Connect database error!"
-		c.JSON(http.StatusOK, result)
-		return
+	var queryId, userId int64
+	queryId, _ = strconv.ParseInt(c.Query("user_id"), 10, 64) // 获取请求的 user_id
+	token := c.DefaultQuery("token", "")                      // 用户的鉴权 token，可能为空
+	myClaims, err := ParseToken(token)
+	if err != nil { // token 解析失败
+		userId = -1 // 说明 token 无效，设置一个不可能存在的 userID, 这样就不影响查找
+	} else { // 如果 token 解析成功，获取 userId
+		userId, _ = strconv.ParseInt(myClaims.Uid, 10, 64)
 	}
-
-	// 以下为数据库连接测试代码，实际功能待实现
-	// 预计完善时间：数据库创建完成后完善
-	queryCommand := "SELECT user_id, `name` FROM `user` WHERE user_id =" + string(selectId) + ";" // 查询语句
-	answer, _ := db.Query(queryCommand)                                                           // 执行查询语句
-
-	for answer.Next() {
-		err := answer.Scan(&result.User.ID, &result.User.Name) // 获取查询结果
-		if err != nil {                                        // 读取失败处理
-			result.Response.StatusCode = -3
-			result.Response.StatusMsg = "Read user error!"
-			c.JSON(http.StatusOK, result)
-			return
-		}
-	}
-
+	result.User = dao.GetUserInfo(queryId, userId)
 	result.Response.StatusCode = 0 // 成功，设置状态码和描述
 	result.Response.StatusMsg = "success"
 	c.JSON(http.StatusOK, result) // 设置返回的信息
