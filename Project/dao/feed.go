@@ -2,6 +2,7 @@ package dao
 
 import (
 	"Project/models"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -21,21 +22,26 @@ func GetVideos(lastTime string, userId int64) []models.Video {
 	queryFollow := DB.Select("follow.user_id, 1 as is_follow").Where("follower_id = ?", userId).Table("follow")
 	// 查询评论
 	queryComment := DB.Select("video_id, COUNT(1) AS comment_count").Group("video_id").Table("comment")
-	// follow 和用户关联起来
-	queryUser := DB.Select("user.*, is_follow").
-		Joins("LEFT JOIN (?) AS fo ON user.user_id = fo.user_id", queryFollow).
-		Table("user")
 	// 查询点赞
 	queryFavorite := DB.Select("video_id, 1 as is_favorite").Where("favorite_id = ?", userId).Table("favorite")
 
 	DB.Table("video").Limit(30).
-		Preload("Author").
-		Select("video.*, users.*, is_favorite, comment_count").
+		// 预加载 User，给 user 表加上 is_follow 字段再查找
+		Preload("Author", func(db *gorm.DB) *gorm.DB {
+			return db.Select("user.*, is_follow").
+				Joins("LEFT JOIN (?) AS fo ON user.user_id = fo.user_id", queryFollow).
+				Table("user")
+		}).
+		// 选择返回的字段
+		Select("video.*, is_favorite, comment_count").
+		// 按照创建时间降序排列，即时间最晚的在前面
 		Order("video.create_time DESC").
+		// 筛选条件，lastTime 之前的视频
 		Where("video.create_time < ? ", lastTime).
+		// 联结评论数
 		Joins("LEFT JOIN (?) AS co ON co.video_id = video.video_id", queryComment).
+		// 联结是否点赞
 		Joins("LEFT JOIN (?) AS fa ON fa.video_id = video.video_id", queryFavorite).
-		Joins("LEFT JOIN (?) AS users ON users.user_id = video.author_id", queryUser).
 		Find(&videos)
 
 	if len(videos) == 0 { // 如果没有视频，返回空
