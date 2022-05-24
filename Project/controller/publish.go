@@ -52,7 +52,7 @@ func Publish(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	// FIXME:
+	// FIXME: coverUrl
 	playUrl := filePath
 	coverUrl := "cover.url.com"
 	fmt.Println("playUrl: ", playUrl)

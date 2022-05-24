@@ -1,3 +1,7 @@
+// package config 项目相关配置
+// 创建人：吴润泽
+// 创建时间：2022-05-23
+
 package config
 
 type mysqlConfig struct {
