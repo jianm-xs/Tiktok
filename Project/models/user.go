@@ -4,12 +4,15 @@
 
 package models
 
-import "time"
+import (
+	"time"
+)
 
 // User 用户对象，定义了用户的基本信息
 type User struct {
 	ID            int64     `gorm:"column:user_id;primary_key" json:"id"`        // 视频 id
 	Name          string    `gorm:"column:name" json:"name"`                     // 用户名
+	Password      string    `gorm:"column:password" json:"-"`                    // 密码
 	FollowCount   int64     `gorm:"column:follow_count" json:"follow_count"`     // 用户的关注总数
 	FollowerCount int64     `gorm:"column:follower_count" json:"follower_count"` // 用户的粉丝总数
 	IsFollow      bool      `gorm:"<-:false;is_follow" json:"is_follow"`         // 当前登录用户是否关注了该用户
