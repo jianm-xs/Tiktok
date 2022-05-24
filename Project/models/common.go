@@ -1,10 +1,10 @@
-// response 包，该包定义了响应的所有结构体
+// common 包，该包定义了响应结构体
 // 创建人：龚江炜
 // 创建时间：2022-5-19
 
 package models
 
-// Response 响应对象，定义了响应的基本内容
+// Response 响应对象，定义了响应状态的基本内容
 type Response struct {
 	StatusCode int32  `json:"status_code"` // 响应状态码
 	StatusMsg  string `json:"status_msg"`  // 状态描述，可以为空

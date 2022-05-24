@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -23,7 +24,7 @@ import (
 // 如果想要保存更多信息，都可以添加到这个结构体中
 
 type MyClaims struct {
-	Uid string `json:"uid" :"uid"` //用户id
+	Uid string `json:"uid"` //用户id
 	jwt.StandardClaims
 }
 
@@ -180,7 +181,7 @@ func Login(c *gin.Context) {
 			return
 		}
 
-		tokenStr, _ := GenToken(string(userId))
+		tokenStr, _ := GenToken(strconv.FormatInt(userId, 10))
 
 		//用户名和密码同时匹配成功就返回id和token
 		result.StatusCode = 0
@@ -190,6 +191,13 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusOK, result)
 		return
 	}
+
+	//匹配不成功，则返回错误信息
+	result.StatusCode = -5
+	result.StatusMsg = "userName is error!"
+	result.UserId = -1
+	result.Token = ""
+	c.JSON(http.StatusOK, result)
 }
 
 // Register 用户注册接口
@@ -220,7 +228,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	//查询数据库uername是否存在
+	//查询数据库username是否存在
 	ans, err := db.Query("SELECT name FROM user WHERE name=?;", username) // 查询user表中username值为用户所输入的
 	var name string = ""                                                  // 保存查询结果
 	if err != nil {
@@ -301,7 +309,7 @@ func UserInfo(c *gin.Context) {
 	answer, _ := db.Query(queryCommand)                                                           // 执行查询语句
 
 	for answer.Next() {
-		err := answer.Scan(&result.User.Id, &result.User.Name) // 获取查询结果
+		err := answer.Scan(&result.User.ID, &result.User.Name) // 获取查询结果
 		if err != nil {                                        // 读取失败处理
 			result.Response.StatusCode = -3
 			result.Response.StatusMsg = "Read user error!"
