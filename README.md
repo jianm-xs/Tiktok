@@ -20,6 +20,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/LuWiHan"><img src="https://avatars.githubusercontent.com/u/96118540?v=4?s=100" width="100px;" alt=""/><br /><sub><b>LuWiHan</b></sub></a><br /><a href="https://github.com/jianm-xs/Tiktok/commits?author=LuWiHan" title="Documentation">📖</a> <a href="#design-LuWiHan" title="Design">🎨</a> <a href="https://github.com/jianm-xs/Tiktok/commits?author=LuWiHan" title="Code">💻</a></td>
     <td align="center"><a href="https://gitee.com/wrz0318"><img src="https://avatars.githubusercontent.com/u/74159645?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Nicknamezz00</b></sub></a><br /><a href="https://github.com/jianm-xs/Tiktok/commits?author=Nicknamezz00" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/KiceAmber"><img src="https://avatars.githubusercontent.com/u/90232365?v=4?s=100" width="100px;" alt=""/><br /><sub><b>kice</b></sub></a><br /><a href="https://github.com/jianm-xs/Tiktok/commits?author=KiceAmber" title="Code">💻</a> <a href="#question-KiceAmber" title="Answering Questions">💬</a></td>
+    <td align="center"><a href="https://github.com/bingguoq"><img src="https://avatars.githubusercontent.com/u/103885711?v=4?s=100" width="100px;" alt=""/><br /><sub><b>bingguoq</b></sub></a><br /><a href="https://github.com/jianm-xs/Tiktok/commits?author=bingguoq" title="Code">💻</a></td>
   </tr>
 </table>
 
