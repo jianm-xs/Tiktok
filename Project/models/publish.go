@@ -4,7 +4,9 @@
 
 package models
 
-import "time"
+import (
+	"time"
+)
 
 // Video 视频对象，定义了视频的基本信息
 type Video struct {
