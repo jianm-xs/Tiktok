@@ -8,29 +8,61 @@ import (
 	"Project/common"
 	"Project/dao"
 	"Project/models"
+	"Project/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
 	"net/http"
+	"path"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
 )
 
 // Publish 投稿接口
 func Publish(context *gin.Context) {
 	var request models.PublishVideoRequest
-	if err := context.ShouldBindJSON(&request); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	_ = request.Token
-	// TODO: JWT auth.
-
-	// Data 需要: `PlayUrl`, `CoverUrl`，其余默认即可
-	err := dao.CreateVideoByUserId(request.UserID, request.Data)
+	data, err := context.FormFile("data")
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	// TODO: 文件大小限制？
+
+	_ = request.Token
+	// TODO: JWT auth.
+
+	var sb strings.Builder
+	// 文件名是时间戳
+	fileNameInt := time.Now().Unix()
+	fileNameStr := strconv.FormatInt(fileNameInt, 10)
+
+	// 带扩展名的文件名
+	sb.WriteString(fileNameStr)
+	fileSuffix := path.Ext(data.Filename)
+	sb.WriteString(fileSuffix)
+	saveFileName := sb.String()
+
+	uploadBasePath := filepath.Join("upload", "videos")
+	filePath := filepath.Join(utils.MkDailyDir(uploadBasePath), "/", saveFileName)
+
+	// 暂时先保存到 server
+	if err := context.SaveUploadedFile(data, filePath); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	// FIXME:
+	playUrl := filePath
+	coverUrl := "cover.url.com"
+	fmt.Println("playUrl: ", playUrl)
+
+	err = dao.CreateVideoByData(request.Title, request.Token, playUrl, coverUrl)
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	context.JSON(http.StatusOK, &models.Response{
 		StatusCode: common.StatusOK,
 		StatusMsg:  "success",
