@@ -10,6 +10,10 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+	err = dao.InitIdWorker()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func main() {

@@ -7,12 +7,10 @@ package controller
 import (
 	"Project/dao"
 	"Project/models"
-	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"strconv"
 	"time"
@@ -145,71 +143,18 @@ func Register(c *gin.Context) {
 	var result models.UserLoginResponse //结果
 	username := c.Query("username")
 	password := c.Query("password")
-	fmt.Println("username:", username, "   password:", password)
-	db, _ := sql.Open("mysql", "root:root@tcp(127.0.0.1:3306)/Tiktok") // 设置参数
-	defer func(db *sql.DB) {
-		err := db.Close()
-		if err != nil {
-			result.Response.StatusCode = -1 // 更改状态码
-			result.Response.StatusMsg = "Close database error!"
-			result.UserId = -1
-			result.Token = ""
-			c.JSON(http.StatusOK, result) // 设置返回的信息
-			return
-		}
-	}(db) // 使用完毕后关闭数据库
-	err := db.Ping() // 连接数据库
-	if err != nil {  // 连接失败处理
-		result.Response.StatusCode = -2
-		result.Response.StatusMsg = "Connect database error!"
-		result.UserId = -1
+	// 查询数据库中 username 是否存在，不存在创建新用户返回 id
+	uid := dao.UserRegister(username, password)
+	if uid == -1 { // 注册失败
+		result.Response.StatusCode = -1
+		result.Response.StatusMsg = "fail to register！"
+		result.UserId = uid
 		result.Token = ""
 		c.JSON(http.StatusOK, result)
 		return
 	}
-
-	//查询数据库username是否存在
-	ans, err := db.Query("SELECT name FROM user WHERE name=?;", username) // 查询user表中username值为用户所输入的
-	var name string = ""                                                  // 保存查询结果
-	if err != nil {
-		fmt.Println("error:", err)
-	}
-	for ans.Next() {
-		//获取查询结果
-		err := ans.Scan(&name)
-		if err != nil {
-			result.Response.StatusCode = -3
-			result.Response.StatusMsg = "Read username error!"
-			result.UserId = -1
-			result.Token = ""
-			c.JSON(http.StatusOK, result)
-			return
-		}
-	}
-	//username已经存在
-	if name == username {
-		result.Response.StatusCode = -4
-		result.Response.StatusMsg = "username had exist!"
-		result.UserId = -1
-		result.Token = ""
-		c.JSON(http.StatusOK, result)
-		return
-	}
-	//使用bcrypt对密码加密
-	pd, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	//在数据库中创建用户数据
-	ret, err := db.Exec("insert into user (user_id, name,password,follow_count,follower_count,create_time,update_time) values(3, ?,?,0,0,?,?)", username, pd, time.Now(), time.Now())
-	if err != nil {
-		fmt.Println("error:", err)
-		result.Response.StatusCode = -5
-		result.Response.StatusMsg = "create user error!"
-		result.UserId = -1
-		result.Token = ""
-		c.JSON(http.StatusOK, result)
-		return
-	}
-	uid, err := ret.LastInsertId()       // 获取注册用户的uid
-	tokenStr, _ := GenToken(string(uid)) // 生成token
+	// 生成token
+	tokenStr, _ := GenToken(string(uid))
 
 	result.Response.StatusCode = 0
 	result.Response.StatusMsg = "success！"
