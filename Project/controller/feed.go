@@ -5,11 +5,13 @@
 package controller
 
 import (
+	"Project/dao"
 	"Project/models"
-	"database/sql"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 // Feed : 视频流接口，用于请求视频列表
@@ -17,49 +19,28 @@ import (
 //      c : 返回的信息（状态和视频列表）
 
 func Feed(c *gin.Context) {
-	var result models.FeedResponse                                  // 结果
-	db, _ := sql.Open("mysql", "root:root@(127.0.0.1:3306)/Tiktok") // 设置参数
-	defer func(db *sql.DB) {
-		err := db.Close()
-		if err != nil {
-			result.Response.StatusCode = -1 // 更改状态码
-			result.Response.StatusMsg = "Close database error!"
-			result.NextTime = 0
-			result.VideoList = nil
-			c.JSON(http.StatusOK, result) // 设置返回的信息
-			return
-		}
-	}(db) // 使用完毕后关闭数据库
-	err := db.Ping() // 连接数据库
-	if err != nil {  // 连接失败处理
-		result.Response.StatusCode = -2
-		result.Response.StatusMsg = "Connect database error!"
-		result.NextTime = 0
-		result.VideoList = nil
-		c.JSON(http.StatusOK, result)
-		return
+	var result models.FeedResponse // 响应结果
+	var lastTime string
+	// 限制返回视频的最新投稿时间，可能为空。默认为 -1
+	lastTimeInt, err := strconv.ParseInt(c.DefaultQuery("latest_time", string(-1)), 10, 64)
+	if err == nil && lastTimeInt != -1 { // 如果有返回时间戳，转为 string 类型
+		tm := time.Unix(lastTimeInt, 0)             // 转为 Time 类型
+		lastTime = tm.Format("2006-01-02 15:04:05") // 格式化为字符串
 	}
-
-	// 以下为数据库连接测试代码，实际功能待实现
-	// 预计完善时间：数据库创建完成后完善
-	queryCommand := "SELECT video_id, video.user_id, name, play_url, cover_url FROM video, `user` WHERE video.user_id = `user`.user_id;" // 查询语句
-	answer, _ := db.Query(queryCommand)                                                                                                  // 执行查询语句
-
-	for answer.Next() {
-		var video models.Video
-		err := answer.Scan(&video.Id, &video.Author.Id, &video.Author.Name, &video.PlayUrl, &video.CoverUrl) // 获取查询结果
-		if err != nil {                                                                                      // 读取失败处理
-			result.Response.StatusCode = -3
-			result.Response.StatusMsg = "Read video or user error!"
-			result.NextTime = 0
-			c.JSON(http.StatusOK, result)
-			return
-		}
-		result.VideoList = append(result.VideoList, video) // 将该视频放入结果中
+	token := c.DefaultQuery("token", "") // 用户的鉴权 token，可能为空
+	var userId int64
+	myClaims, err := ParseToken(token)
+	if err != nil { // token 解析失败
+		userId = -1 // 说明 token 无效，设置一个不可能存在的 userID, 这样就不影响查找
+	} else { // 如果 token 解析成功，获取 userId
+		userId, _ = strconv.ParseInt(myClaims.Uid, 10, 64)
 	}
-
-	result.Response.StatusCode = 0 // 成功，设置状态码和描述
+	result.VideoList = dao.GetVideos(lastTime, userId) // 执行数据库查询，获取结果
+	result.Response.StatusCode = 0                     // 成功，设置状态码和描述
 	result.Response.StatusMsg = "success"
-	result.NextTime = 1
+	if len(result.VideoList) != 0 { // 如果有返回视频，更新 nextTime。方便下次获取视频列表时使用
+		length := len(result.VideoList)                                // 获取视频数
+		result.NextTime = result.VideoList[length-1].CreateTime.Unix() // 获取最后一个视频的时间，转为 int
+	}
 	c.JSON(http.StatusOK, result) // 设置返回的信息
 }

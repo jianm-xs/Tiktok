@@ -6,10 +6,10 @@ package dao
 
 import (
 	"Project/config"
-	"Project/models"
 	"fmt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 	"log"
 )
 
@@ -44,12 +44,14 @@ func InitMysql() error {
 	}), &gorm.Config{
 		DisableForeignKeyConstraintWhenMigrating: true, // 关闭外键约束
 		QueryFields:                              true, // select 所有字段而非 select *
+		NamingStrategy: schema.NamingStrategy{
+			SingularTable: true,
+		},
 	})
 	if err != nil {
 		log.Fatalf("Connection error: %v\n", err)
 		return err
 	}
-
 	sqlDB, err := db.DB()
 	if err != nil {
 		log.Printf("Error occured when creating sqlDB: %v\n", err)
@@ -61,17 +63,15 @@ func InitMysql() error {
 	sqlDB.SetMaxOpenConns(100)
 	// 连接池连接最大存活时间，小于 0 表示不关闭
 	sqlDB.SetConnMaxLifetime(-1)
-
 	// 自动迁移，在这里添加你的 models
-	err = db.AutoMigrate(
-		&models.User{},
-		&models.Video{},
-	)
-	if err != nil {
-		log.Printf("AutoMigrate error: %v\n", err)
-		return err
-	}
-
+	//err = db.AutoMigrate(
+	//	&models.User{},
+	//	&models.Video{},
+	//)
+	//if err != nil {
+	//	log.Printf("AutoMigrate error: %v\n", err)
+	//	return err
+	//}
 	DB = db // 暴露在外
 	return nil
 }
