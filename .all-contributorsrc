@@ -15,7 +15,9 @@
         "tutorial",
         "business",
         "code",
-        "projectManagement"
+        "projectManagement",
+        "bug",
+        "question"
       ]
     },
     {
@@ -43,6 +45,16 @@
       "name": "kice",
       "avatar_url": "https://avatars.githubusercontent.com/u/90232365?v=4",
       "profile": "https://github.com/KiceAmber",
+      "contributions": [
+        "code",
+        "question"
+      ]
+    },
+    {
+      "login": "bingguoq",
+      "name": "bingguoq",
+      "avatar_url": "https://avatars.githubusercontent.com/u/103885711?v=4",
+      "profile": "https://github.com/bingguoq",
       "contributions": [
         "code"
       ]
