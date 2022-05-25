@@ -3,10 +3,11 @@ package main
 import (
 	"Project/controller"
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 func initRouter(r *gin.Engine) {
-	r.Static("/static", "./video") // 设置静态文件路径
+	r.StaticFS("/video", http.Dir("./video")) // 设置静态文件路径
 
 	apiRouter := r.Group("/douyin") // 路由分组
 

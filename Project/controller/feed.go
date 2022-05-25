@@ -31,7 +31,10 @@ func Feed(c *gin.Context) {
 	var userId int64
 	myClaims, err := ParseToken(token)
 	if err != nil { // token 解析失败
-		userId = -1 // 说明 token 无效，设置一个不可能存在的 userID, 这样就不影响查找
+		result.Response.StatusCode = -1            // 失败，设置状态码和描述
+		result.Response.StatusMsg = "token error!" // token 有误
+		c.JSON(http.StatusOK, result)              // 设置返回的信息
+		return
 	} else { // 如果 token 解析成功，获取 userId
 		userId, _ = strconv.ParseInt(myClaims.Uid, 10, 64)
 	}

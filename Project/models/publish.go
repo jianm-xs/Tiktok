@@ -29,9 +29,3 @@ type PublishVideoRequest struct {
 	Token string `json:"token"`
 	Data  Video  `json:"data"` // 视频数据
 }
-
-// PublishVideoResponse 投稿视频响应格式
-type PublishVideoResponse struct {
-}
-
-//ISFollow      bool      `gorm:"<-:false;is_follow" json:"-"'`                    // 是否关注了作者，作为中转
