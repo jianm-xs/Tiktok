@@ -12,7 +12,7 @@ type mysqlConfig struct {
 var MysqlCfg = mysqlConfig{
 	Url:      "127.0.0.1",
 	UserName: "root",
-	Password: "Aa509224765_",
+	Password: "root",
 	DBName:   "Tiktok",
 	Port:     "3306",
 	CharSet:  "utf8mb4",
@@ -23,6 +23,7 @@ type snowflakeConfig struct {
 	DateCenterId int64 //数据中心ID
 }
 
+// 本机器的雪花 ID 配置
 var SnowFlakeCfg = snowflakeConfig{
 	WorkerId:     0,
 	DateCenterId: 0,

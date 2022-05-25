@@ -76,28 +76,28 @@ func InitIdWorker() error {
 	}
 
 	//	创建 视频 ID 生成器
-	videoIdWorker, err := createWorker(config.SnowFlakeCfg.WorkerId, config.SnowFlakeCfg.DateCenterId+1)
+	videoIdWorker, err := createWorker(config.SnowFlakeCfg.WorkerId+1, config.SnowFlakeCfg.DateCenterId)
 	VideoIdWorker = videoIdWorker
 	if err != nil { // 创建失败
 		return err
 	}
 
 	//	创建 评论 ID 生成器
-	commentIdWorker, err := createWorker(config.SnowFlakeCfg.WorkerId, config.SnowFlakeCfg.DateCenterId+2)
+	commentIdWorker, err := createWorker(config.SnowFlakeCfg.WorkerId+2, config.SnowFlakeCfg.DateCenterId)
 	CommentIdWorker = commentIdWorker
 	if err != nil {
 		return err
 	}
 
 	//	创建 粉丝 ID 生成器
-	followIdWorker, err := createWorker(config.SnowFlakeCfg.WorkerId, config.SnowFlakeCfg.DateCenterId+3)
+	followIdWorker, err := createWorker(config.SnowFlakeCfg.WorkerId+3, config.SnowFlakeCfg.DateCenterId)
 	FollowIdWorker = followIdWorker
 	if err != nil {
 		return err
 	}
 
 	//	创建 点赞 ID 生成器
-	favoriteIdWorker, err := createWorker(config.SnowFlakeCfg.WorkerId, config.SnowFlakeCfg.DateCenterId+4)
+	favoriteIdWorker, err := createWorker(config.SnowFlakeCfg.WorkerId+4, config.SnowFlakeCfg.DateCenterId)
 	FavoriteIdWorker = favoriteIdWorker
 
 	return err
