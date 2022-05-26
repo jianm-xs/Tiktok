@@ -7,9 +7,8 @@ import (
 )
 
 func initRouter(r *gin.Engine) {
-	r.StaticFS("/video", http.Dir("./video")) // 设置静态文件路径
-
-	apiRouter := r.Group("/douyin") // 路由分组
+	r.StaticFS("upload", http.Dir("./upload")) // 设置静态文件路径
+	apiRouter := r.Group("/douyin")            // 路由分组
 
 	// 基础接口
 	apiRouter.GET("/feed/", controller.Feed)                // 视频流接口
