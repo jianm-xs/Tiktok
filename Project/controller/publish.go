@@ -8,9 +8,13 @@ import (
 	"Project/common"
 	"Project/dao"
 	"Project/models"
+	"bytes"
 	"fmt"
+	"github.com/disintegration/imaging"
 	"github.com/gin-gonic/gin"
+	ffmpeg "github.com/u2takey/ffmpeg-go"
 	"net/http"
+	"os"
 	"path"
 	"path/filepath"
 	"strconv"
@@ -63,8 +67,8 @@ func Publish(context *gin.Context) {
 	// 转换为 string 作为视频文件名
 	saveFileName := sb.String()
 
-	filePath := filepath.Join("./video", "/", saveFileName)
-
+	filePath := filepath.Join("upload/videos", "/", saveFileName)
+	coverPath := filepath.Join("upload/images", "/", fileNameStr+".jpeg")
 	fmt.Println("=============>", filePath, authorId)
 	// 暂时先保存到 server
 	if err := context.SaveUploadedFile(data, filePath); err != nil {
@@ -75,14 +79,47 @@ func Publish(context *gin.Context) {
 	}
 	// FIXME: coverUrl
 
+	// 获取封面地址
+	buf := bytes.NewBuffer(nil)
+	// 获取第一帧
+	err = ffmpeg.Input(filePath).
+		Filter("select", ffmpeg.Args{"gte(n, 1)"}).
+		Output("pipe:", ffmpeg.KwArgs{"vframes": 1, "format": "image2", "vcodec": "mjpeg"}).
+		WithOutput(buf, os.Stdout).
+		Run()
+	// 如果获取第一帧失败，设置状态描述
+	if err != nil {
+		result.StatusCode = -4 // 失败，设置状态码和描述
+		result.StatusMsg = "get the cover image error!"
+		context.JSON(http.StatusOK, result) // 设置返回的信息
+		return
+	}
+	// 创建图片
+	img, err := imaging.Decode(buf)
+	if err != nil {
+		result.StatusCode = -4 // 失败，设置状态码和描述
+		result.StatusMsg = "get the cover image error!"
+		context.JSON(http.StatusOK, result) // 设置返回的信息
+		return
+	}
+	// 保存图片
+	err = imaging.Save(img, coverPath)
+	if err != nil {
+		result.StatusCode = -4 // 失败，设置状态码和描述
+		result.StatusMsg = "get the cover image error!"
+		context.JSON(http.StatusOK, result) // 设置返回的信息
+		return
+	}
+
 	// 播放地址为服务器地址 + 文件路径
 	playUrl := "http://81.70.17.190:1080/" + filePath
-	coverUrl := "https://cdn.pixabay.com/photo/2016/03/27/18/10/bear-1283347_1280.jpg"
+
+	coverUrl := "http://81.70.17.190:1080/" + coverPath
 	fmt.Println("playUrl: ", playUrl)
 
 	err = dao.CreateVideoByData(title, authorId, playUrl, coverUrl)
 	if err != nil { // 如果发布失败，返回信息
-		result.StatusCode = -4                        // 失败，设置状态码和描述
+		result.StatusCode = -5                        // 失败，设置状态码和描述
 		result.StatusMsg = "Insert into Mysql error!" // token 有误
 		context.JSON(http.StatusOK, result)           // 设置返回的信息
 		return
@@ -93,17 +130,6 @@ func Publish(context *gin.Context) {
 		StatusCode: common.StatusOK,
 		StatusMsg:  "success",
 	})
-}
-
-// VideoVo 接受从数据库查出来的部分数据的结构体
-type VideoVo struct {
-	Id            int64  `json:"id" db:"id"`                          // 视频 ID
-	UserId        int64  `json:"user_id" db:"user_id"`                // userId
-	PlayUrl       string `json:"play_url" db:"play_url"`              // 视频播放地址
-	CoverUrl      string `json:"cover_url" db:"cover_url"`            // 视频封面地址
-	FavoriteCount int64  `json:"favorite_count" db:"favourite_count"` // 视频点赞总数
-	CommentCount  int64  `json:"comment_count" db:"comment_count"`    // 视频评论总数
-	IsFavorite    bool   `json:"is_favorite" db:"isfavourite"`        // 是否已点赞
 }
 
 // PublishList 视频发布列表
