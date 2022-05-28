@@ -77,7 +77,6 @@ func Publish(context *gin.Context) {
 		context.JSON(http.StatusOK, result)    // 设置返回的信息
 		return
 	}
-	// FIXME: coverUrl
 
 	// 获取封面地址
 	buf := bytes.NewBuffer(nil)
