@@ -11,7 +11,8 @@ func CommentAction(c *gin.Context) {
 	c.JSON(http.StatusOK, models.CommentActionResponse{
 		Response: models.Response{
 			StatusCode: 0,
-			StatusMsg:  "success!"},
+			StatusMsg:  "success!",
+		},
 	})
 }
 
