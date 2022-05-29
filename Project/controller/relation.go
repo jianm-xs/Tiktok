@@ -12,29 +12,30 @@ import (
 // RelationAction 关注操作
 func RelationAction(c *gin.Context) {
 	// 获取请求参数
-	uid := c.DefaultQuery("user_id", "-1")
-	userId, _ := strconv.ParseInt(uid, 10, 64)
 	token := c.DefaultQuery("token", "")
 	toUserId, _ := strconv.ParseInt(c.DefaultQuery("to_user_id", "-1"), 10, 64)
 	actionType, _ := strconv.ParseInt(c.DefaultQuery("action_type", "-1"), 10, 64)
 	// 参数获取失败
-	if userId == -1 || token == "" || toUserId == -1 || actionType == -1 {
+	if token == "" || toUserId == -1 || actionType == -1 {
 		c.JSON(http.StatusOK, models.Response{
 			StatusCode: -1,
 			StatusMsg:  "failed to obtain parameters!",
 		})
 		return
 	}
-	// token 校验失败
-	if answer, err := CheckToken(token, uid); err != nil || answer == false {
+	var userId int64
+	myClaims, err := ParseToken(token)
+	if err != nil { // token 解析失败
 		c.JSON(http.StatusOK, models.Response{
 			StatusCode: -2,
 			StatusMsg:  "token error!",
 		})
 		return
+	} else { // 如果 token 解析成功，获取 userId
+		userId, _ = strconv.ParseInt(myClaims.Uid, 10, 64)
 	}
 	// 数据库操作
-	err := dao.RelationAction(userId, toUserId, actionType)
+	err = dao.RelationAction(userId, toUserId, actionType)
 	if err != nil {
 		// 操作失败
 		c.JSON(http.StatusOK, models.Response{
