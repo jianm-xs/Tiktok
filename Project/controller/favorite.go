@@ -5,6 +5,7 @@ import (
 	"Project/models"
 	"Project/utils"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -53,10 +54,42 @@ func FavoriteAction(c *gin.Context) {
 
 // FavoriteList 点赞列表接口
 func FavoriteList(c *gin.Context) {
+	// 获取请求参数
+	uid, _ := strconv.ParseInt(c.DefaultQuery("user_id", "-1"), 10, 64)
+	token := c.DefaultQuery("token", "")
+	// 参数获取失败
+	if uid == -1 || token == "" {
+		c.JSON(http.StatusOK, models.VideoListResponse{
+			Response: models.Response{
+				StatusCode: -1,
+				StatusMsg:  "failed to obtain parameters!"},
+			VideoList: nil,
+		})
+		return
+	}
+
+	// 校验 token
+	// token 无效
+	if ok, err := utils.CheckToken(token, strconv.FormatInt(uid, 10)); !ok {
+		// 记录校验失败 err
+		log.Println(err)
+		c.JSON(http.StatusOK, models.VideoListResponse{
+			Response: models.Response{
+				StatusCode: -2,
+				StatusMsg:  "token error!"},
+			VideoList: nil,
+		})
+		return
+	}
+
+	// 获取视频点赞列表
+	videos := dao.GetFavoriteList(uid)
+
 	c.JSON(http.StatusOK, models.VideoListResponse{
 		Response: models.Response{
 			StatusCode: 0,
 			StatusMsg:  "success!"},
-		VideoList: nil,
+		VideoList: videos,
 	})
+	return
 }
