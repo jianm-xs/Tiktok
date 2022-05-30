@@ -2,7 +2,7 @@
 // 创建人：刘伟欢
 // 创建时间：2022-5-24
 
-package dao
+package utils
 
 import (
 	"Project/config"
@@ -35,18 +35,23 @@ const (
 )
 
 // 注册 ID 生成器
+
 var RegisterIdWorker *SnowflakeIdWorker
 
 // 视频 ID 生成器
+
 var VideoIdWorker *SnowflakeIdWorker
 
 // 评论 ID 生成器
+
 var CommentIdWorker *SnowflakeIdWorker
 
 // 粉丝 ID 生成器
+
 var FollowIdWorker *SnowflakeIdWorker
 
 // 点赞 ID 生成器
+
 var FavoriteIdWorker *SnowflakeIdWorker
 
 // 根据 workerId ， dataCenterId ,创建 ID 生成器
@@ -67,6 +72,7 @@ func createWorker(wId int64, dId int64) (*SnowflakeIdWorker, error) {
 }
 
 // 初始化所有 ID 生成器
+
 func InitIdWorker() error {
 	//	创建 注册 ID 生成器
 	registerIdWorker, err := createWorker(config.SnowFlakeCfg.WorkerId, config.SnowFlakeCfg.DateCenterId)
@@ -76,34 +82,35 @@ func InitIdWorker() error {
 	}
 
 	//	创建 视频 ID 生成器
-	videoIdWorker, err := createWorker(config.SnowFlakeCfg.WorkerId+1, config.SnowFlakeCfg.DateCenterId)
+	videoIdWorker, err := createWorker(config.SnowFlakeCfg.WorkerId, config.SnowFlakeCfg.DateCenterId)
 	VideoIdWorker = videoIdWorker
 	if err != nil { // 创建失败
 		return err
 	}
 
 	//	创建 评论 ID 生成器
-	commentIdWorker, err := createWorker(config.SnowFlakeCfg.WorkerId+2, config.SnowFlakeCfg.DateCenterId)
+	commentIdWorker, err := createWorker(config.SnowFlakeCfg.WorkerId, config.SnowFlakeCfg.DateCenterId)
 	CommentIdWorker = commentIdWorker
 	if err != nil {
 		return err
 	}
 
 	//	创建 粉丝 ID 生成器
-	followIdWorker, err := createWorker(config.SnowFlakeCfg.WorkerId+3, config.SnowFlakeCfg.DateCenterId)
+	followIdWorker, err := createWorker(config.SnowFlakeCfg.WorkerId, config.SnowFlakeCfg.DateCenterId)
 	FollowIdWorker = followIdWorker
 	if err != nil {
 		return err
 	}
 
 	//	创建 点赞 ID 生成器
-	favoriteIdWorker, err := createWorker(config.SnowFlakeCfg.WorkerId+4, config.SnowFlakeCfg.DateCenterId)
+	favoriteIdWorker, err := createWorker(config.SnowFlakeCfg.WorkerId, config.SnowFlakeCfg.DateCenterId)
 	FavoriteIdWorker = favoriteIdWorker
 
 	return err
 }
 
 // 获取 ID ，ID 生成异常，返回-1与错误信息
+
 func (w *SnowflakeIdWorker) NextId() (int64, error) {
 	// 保障线程安全 加锁
 	w.mutex.Lock()

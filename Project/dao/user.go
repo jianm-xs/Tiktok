@@ -2,6 +2,7 @@ package dao
 
 import (
 	"Project/models"
+	"Project/utils"
 	"errors"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -66,7 +67,7 @@ func UserRegister(username string, password string) int64 {
 			CreateTime:    time.Now(),
 			UpdateTime:    time.Now(),
 		}
-		if newUser.ID, err = RegisterIdWorker.NextId(); err != nil {
+		if newUser.ID, err = utils.RegisterIdWorker.NextId(); err != nil {
 			log.Println(err)
 			return -1 //	ID 生成失败返回-1
 		}

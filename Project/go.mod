@@ -4,18 +4,17 @@ go 1.18
 
 require (
 	github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1
+	github.com/disintegration/imaging v1.6.2
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/jmoiron/sqlx v1.3.5
+	github.com/u2takey/ffmpeg-go v0.4.1
 	golang.org/x/crypto v0.0.0-20220518034528-6f7dac969898
 	gorm.io/driver/mysql v1.3.3
 	gorm.io/gorm v1.23.5
 )
 
 require (
-	github.com/3d0c/gmf v0.0.0-20220425074253-5646e6e80daf // indirect
 	github.com/aws/aws-sdk-go v1.38.20 // indirect
-	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
@@ -29,10 +28,9 @@ require (
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/u2takey/ffmpeg-go v0.4.1 // indirect
+	github.com/stretchr/testify v1.7.1 // indirect
 	github.com/u2takey/go-utils v0.3.1 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
-	github.com/xfrr/goffmpeg v0.0.0-20210624103149-5ca2d3062daf // indirect
 	golang.org/x/image v0.0.0-20220413100746-70e8d0d3baa9 // indirect
 	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
 	golang.org/x/text v0.3.7 // indirect

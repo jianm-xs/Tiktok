@@ -8,6 +8,7 @@ import (
 	"Project/common"
 	"Project/dao"
 	"Project/models"
+	"Project/utils"
 	"bytes"
 	"fmt"
 	"github.com/disintegration/imaging"
@@ -41,7 +42,7 @@ func Publish(context *gin.Context) {
 	title := context.PostForm("title")
 
 	var authorId int64
-	myClaims, err := ParseToken(token)
+	myClaims, err := utils.ParseToken(token)
 	if err != nil { // token 解析失败
 		result.StatusCode = -2              // 失败，设置状态码和描述
 		result.StatusMsg = "token error!"   // token 有误
@@ -147,7 +148,7 @@ func PublishList(c *gin.Context) {
 	}
 	// 获取当前用户的 id
 	var userId int64
-	myClaims, err := ParseToken(token)
+	myClaims, err := utils.ParseToken(token)
 	if err != nil { // token 解析失败
 		result.StatusCode = -2            // 失败，设置状态码和描述
 		result.StatusMsg = "token error!" // token 有误
