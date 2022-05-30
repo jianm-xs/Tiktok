@@ -22,10 +22,18 @@ func FavoriteAction(userId, videoId, actionType int64) error {
 			CreateTime: time.Now(),
 		}
 		// 插入操作
-		err := DB.Debug().Create(&favorite).Error
+		err := DB.Debug().Model(&models.Video{ID: videoId}).UpdateColumn("favorite_count", gorm.Expr("favorite_count + 1")).Error
+		if err != nil {
+			return err // 视频的点赞数加一
+		}
+		err = DB.Debug().Create(&favorite).Error // 插入这条点赞记录
 		return err
 	} else {
-		err := DB.Debug().Delete(models.Favorite{}, "favorite_id = ? and video_id = ?", userId, videoId).Error
+		err := DB.Debug().Model(&models.Video{ID: videoId}).UpdateColumn("favorite_count", gorm.Expr("favorite_count - 1")).Error
+		if err != nil {
+			return err // 视频点赞 -1 失败
+		}
+		err = DB.Debug().Delete(models.Favorite{}, "favorite_id = ? and video_id = ?", userId, videoId).Error // 删除这条点赞记录
 		return err
 	}
 }
