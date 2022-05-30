@@ -35,3 +35,21 @@ type UserInfoResponse struct {
 	Response
 	User `json:"user"`
 }
+
+// CommentListResponse 评论列表响应对象，返回评论列表
+type CommentListResponse struct {
+	Response
+	CommentList []Comment `json:"comment_list"` // 评论列表
+}
+
+// CommentActionResponse 评论操作，返回评论
+type CommentActionResponse struct {
+	Response
+	Comment Comment `json:"comment"` // 评论信息
+}
+
+// FollowList 关注列表，返回所有关注的用户
+type FollowList struct {
+	Response
+	UserList []User `json:"user_list"` // 关注的用户
+}

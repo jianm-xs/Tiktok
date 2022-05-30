@@ -21,3 +21,9 @@
 go.work
 
 .idea
+
+# Go mod
+go.mod
+
+# Upload Files
+**/upload/

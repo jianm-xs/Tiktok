@@ -15,11 +15,11 @@ import (
 
 var DB *gorm.DB
 
-// InitMysql Initialize database with dialect mysql.
+// InitMysql 初始化 Mysql 数据库连接
 func InitMysql() error {
 	var db *gorm.DB
 	var err error
-	// See more about DSN https://github.com/go-sql-driver/mysql#dsn-data-source-name
+	// DSN: https://github.com/go-sql-driver/mysql#dsn-data-source-name
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=True&loc=Local",
 		config.MysqlCfg.UserName,
 		config.MysqlCfg.Password,
@@ -29,7 +29,7 @@ func InitMysql() error {
 		config.MysqlCfg.CharSet,
 	)
 	db, err = gorm.Open(mysql.New(mysql.Config{
-		// DSN data source name
+		// DSN Data Source Name
 		DSN: dsn,
 		// string 类型字段的默认长度
 		DefaultStringSize: 256,
@@ -57,11 +57,11 @@ func InitMysql() error {
 		log.Printf("Error occured when creating sqlDB: %v\n", err)
 		return err
 	}
-	// The maximum number of connections in the idle connection pool.
+	// 最大闲置连接数
 	sqlDB.SetMaxIdleConns(20)
-	// The maximum number of open connections to the database.
+	// 连接池最大连接数
 	sqlDB.SetMaxOpenConns(100)
-	// The maximum amount of time a connection may be reused.
+	// 连接池连接最大存活时间，小于 0 表示不关闭
 	sqlDB.SetConnMaxLifetime(-1)
 	// 自动迁移，在这里添加你的 models
 	//err = db.AutoMigrate(

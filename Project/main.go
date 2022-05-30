@@ -10,6 +10,11 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+	// 初始化所有 ID 生成器
+	err = dao.InitIdWorker()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func main() {

@@ -2,8 +2,11 @@ package dao
 
 import (
 	"Project/models"
+	"errors"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 	"log"
+	"time"
 )
 
 // UserLogin 用户登录，查询数据库中的信息是否匹配
@@ -32,6 +35,50 @@ func UserLogin(userId *int64, username string, userPassword string) error {
 	*userId = user.ID
 	return nil
 
+}
+
+// UserRegister 用户注册，查询用户名是否存在，不存在注册新用户
+// 参数 :
+//		username : 请求的用户名
+// 		userPassword : 请求的用户密码
+// 返回值：
+//		如果注册成功，返回 userid ，否则返回 -1，标明用户名已存在，注册失败
+
+func UserRegister(username string, password string) int64 {
+	var user models.User
+	// 查询数据库username是否存在
+	err := DB.Select("user_id").Where("name=?", username).Take(&user).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) { // 用户名不存在,进行注册
+		// 使用bcrypt对密码加密
+		pd, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		// 密码加密失败
+		if err != nil {
+			log.Println(err)
+			return -1 //	注册失败返回-1
+		}
+		// 在数据库中创建用户数据
+		newUser := models.User{
+			ID:            -1,
+			Name:          username,
+			Password:      string(pd),
+			FollowCount:   0,
+			FollowerCount: 0,
+			CreateTime:    time.Now(),
+			UpdateTime:    time.Now(),
+		}
+		if newUser.ID, err = RegisterIdWorker.NextId(); err != nil {
+			log.Println(err)
+			return -1 //	ID 生成失败返回-1
+		}
+		// 插入新用户进 user 表
+		DB.Create(&newUser)
+		return newUser.ID
+	} else { // 用户名已存在或者查询失败
+		if err != nil { // 查询失败，记录err
+			log.Println(err)
+		}
+		return -1 //	注册失败返回-1
+	}
 }
 
 // GetUserInfo 查询用户信息，返回用户的所有公开信息
