@@ -7,6 +7,7 @@ package controller
 import (
 	"Project/dao"
 	"Project/models"
+	"Project/utils"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"net/http"
@@ -29,7 +30,7 @@ func Feed(c *gin.Context) {
 	//}
 	token := c.DefaultQuery("token", "") // 用户的鉴权 token，可能为空
 	var userId int64
-	myClaims, err := ParseToken(token)
+	myClaims, err := utils.ParseToken(token)
 	if err != nil { // token 解析失败
 		userId = -1 // 当做没有登录处理
 	} else { // 如果 token 解析成功，获取 userId

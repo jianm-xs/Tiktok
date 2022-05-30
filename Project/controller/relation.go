@@ -3,6 +3,7 @@ package controller
 import (
 	"Project/dao"
 	"Project/models"
+	"Project/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -24,7 +25,7 @@ func RelationAction(c *gin.Context) {
 		return
 	}
 	var userId int64
-	myClaims, err := ParseToken(token)
+	myClaims, err := utils.ParseToken(token)
 	if err != nil { // token 解析失败
 		c.JSON(http.StatusOK, models.Response{
 			StatusCode: -2,
@@ -57,7 +58,7 @@ func FollowList(c *gin.Context) {
 	var queryId, userId int64
 	queryId, _ = strconv.ParseInt(c.Query("user_id"), 10, 64) // 获取请求的 user_id
 	token := c.DefaultQuery("token", "")                      // 用户的鉴权 token，可能为空
-	myClaims, err := ParseToken(token)
+	myClaims, err := utils.ParseToken(token)
 	if err != nil { // token 解析失败
 		userId = -1 // 说明 token 无效，设置一个不可能存在的 userID, 这样就不影响查找
 	} else { // 如果 token 解析成功，获取 userId

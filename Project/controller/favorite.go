@@ -3,6 +3,7 @@ package controller
 import (
 	"Project/dao"
 	"Project/models"
+	"Project/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -23,7 +24,7 @@ func FavoriteAction(c *gin.Context) {
 		return
 	}
 	var userId int64
-	myClaims, err := ParseToken(token)
+	myClaims, err := utils.ParseToken(token)
 	if err != nil { // token 解析失败
 		c.JSON(http.StatusOK, models.Response{
 			StatusCode: -2,
