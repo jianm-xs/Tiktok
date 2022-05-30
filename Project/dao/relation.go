@@ -2,6 +2,7 @@ package dao
 
 import (
 	"Project/models"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -21,10 +22,26 @@ func RelationAction(userId, toUserId, actionType int64) error {
 			CreateTime: time.Now(),
 		}
 		// 插入操作
-		err := DB.Debug().Create(&follow).Error
+		err := DB.Debug().Model(&models.User{ID: toUserId}).UpdateColumn("follower_count", gorm.Expr("follower_count + 1")).Error
+		if err != nil {
+			return err
+		}
+		err = DB.Debug().Model(&models.User{ID: userId}).UpdateColumn("follow_count", gorm.Expr("follower_count + 1")).Error
+		if err != nil {
+			return err
+		}
+		err = DB.Debug().Create(&follow).Error
 		return err
 	} else {
-		err := DB.Debug().Delete(models.Follow{}, "user_id = ? and follower_id = ?", toUserId, userId).Error
+		err := DB.Debug().Model(&models.User{ID: toUserId}).UpdateColumn("follower_count", gorm.Expr("follower_count - 1")).Error
+		if err != nil {
+			return err
+		}
+		err = DB.Debug().Model(&models.User{ID: userId}).UpdateColumn("follow_count", gorm.Expr("follow_count - 1")).Error
+		if err != nil {
+			return err
+		}
+		err = DB.Debug().Delete(models.Follow{}, "user_id = ? and follower_id = ?", toUserId, userId).Error
 		return err
 	}
 }
