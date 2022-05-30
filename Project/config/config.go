@@ -14,7 +14,7 @@ type mysqlConfig struct {
 }
 
 var MysqlCfg = mysqlConfig{
-	Url:      "127.0.0.1",
+	Url:      "81.70.17.190",
 	UserName: "root",
 	Password: "root",
 	DBName:   "Tiktok",
@@ -28,6 +28,7 @@ type snowflakeConfig struct {
 }
 
 // 本机器的雪花 ID 配置
+
 var SnowFlakeCfg = snowflakeConfig{
 	WorkerId:     0,
 	DateCenterId: 0,
