@@ -3,6 +3,7 @@ package dao
 import (
 	"Project/models"
 	"errors"
+	"fmt"
 	"gorm.io/gorm"
 	"time"
 )
@@ -19,7 +20,8 @@ func RelationAction(userId, toUserId, actionType int64) error {
 		return errors.New("you cannot operate on yourself")
 	}
 	var count int64 // 查看有没有对应的 user-follower 对
-	DB.Table("follow").Select("user_id = ? AND follower_id = ?", toUserId, userId).Count(&count)
+	_ = DB.Debug().Table("follow").Where("user_id = ? AND follower_id = ?", toUserId, userId).Count(&count).Error
+	fmt.Println("=====>", count, " and userID : ", userId, " and toUserId:", toUserId)
 	if count+actionType == 2 {
 		// count 只有 1 和 0
 		// 如果 count = 0,那么不能删除(actionType != 2)
@@ -66,20 +68,28 @@ func RelationAction(userId, toUserId, actionType int64) error {
 
 // GetFollowList 获取关注者列表
 // 参数 :
-//		userId : 请求的用户 id
-// 		toUserId : 关注的用户 id
-//		actionType : 操作类型： 1 -> 关注， 2 -> 取消关注
+//		queryId : 要查看的用户的 id
+//		userId : 当前用户的 id
 // 返回值：
-//		如果操作成功，返回 nil， 否则返回错误信息
-func GetFollowList(userId int64) ([]models.User, error) {
+//		返回关注者列表和错误信息
+func GetFollowList(queryId, userId int64) ([]models.User, error) {
 	var users []models.User // 结果
-	// 查询该用户信息
-	err := DB.Debug().Table("follow").
-		Select("user.*, 1 as is_follow").
-		// 条件筛选，按 user_id 查找
-		Where("follow.follower_id = ?", userId).
-		// 联结用户表
-		Joins("LEFT JOIN user ON user.user_id = follow.user_id").
+	// 查找当前用户关注的所有用户
+	queryUserFollow := DB.Raw("(?) UNION ALL (?)",
+		DB.Raw("SELECT ? as user_id, 1 as is_follow", userId),                                        // 自己不能关注自己
+		DB.Select("follow.user_id, 1 as is_follow").Where("follower_id = ?", userId).Table("follow"), // 查找当前用户关注的所有用户
+	)
+	// 查找 queryID 关注的用户
+	queryQueryFollow := DB.Debug().Table("follow").
+		Select("follow.user_id, is_follow").
+		Where("follower_id = ?", queryId).
+		// 联结当前用户关注的人，完成 is_follow 查询
+		Joins("LEFT JOIN (?) AS fo ON fo.user_id = follow.user_id", queryUserFollow)
+	// 查询用户信息
+	err := DB.Debug().Table("user").
+		Select("user.*, is_follow").
+		// 右联结 queryId 关注的用户
+		Joins("RIGHT JOIN (?) AS query ON user.user_id = query.user_id", queryQueryFollow).
 		Find(&users).Error
 	return users, err
 }
@@ -91,22 +101,27 @@ func GetFollowList(userId int64) ([]models.User, error) {
 // 返回值：
 //		返回根据 queryId 查询出的粉丝列表
 func GetFollowerUserList(userId int64, queryId int64) []models.User {
-	var user []models.User // 结果
+	var users []models.User // 结果
 
-	// 查询 follow
 	// 查找当前用户关注的所有用户
-	queryFollow := DB.Select("follow.user_id, 1 as is_follow").
-		Where("follower_id = ?", userId).
-		Table("follow")
-
-	// 查询 follower
-	DB.Table("user").
-		Select("user.*,is_follow").
-		// 联结粉丝
-		Joins("JOIN `follow` AS f ON user.`user_id`=f.`follower_id` AND f.`user_id`= ? ", queryId).
-		// 联结关注
-		Joins("LEFT JOIN (?) AS fo ON user.user_id = fo.user_id", queryFollow).
-		Find(&user)
-
-	return user
+	queryUserFollow := DB.Raw("(?) UNION ALL (?)",
+		DB.Raw("SELECT ? as user_id, 1 as is_follow", userId),                                        // 自己不能关注自己
+		DB.Select("follow.user_id, 1 as is_follow").Where("follower_id = ?", userId).Table("follow"), // 查找当前用户关注的所有用户
+	)
+	// 查找 queryID 的粉丝
+	queryQueryFollow := DB.Debug().Table("follow").
+		Select("fo.user_id, is_follow").
+		Where("follow.user_id = ?", queryId).
+		// 联结当前用户关注的人，完成 is_follow 查询
+		Joins("LEFT JOIN (?) AS fo ON fo.user_id = follow.follower_id", queryUserFollow)
+	// 查询用户信息
+	err := DB.Debug().Table("user").
+		Select("user.*, is_follow").
+		// 右联结 queryId 的粉丝
+		Joins("RIGHT JOIN (?) AS query ON user.user_id = query.user_id", queryQueryFollow).
+		Find(&users).Error
+	if err != nil {
+		return nil
+	}
+	return users
 }
