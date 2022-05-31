@@ -4,7 +4,6 @@ import (
 	"Project/dao"
 	"Project/models"
 	"Project/utils"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -37,7 +36,6 @@ func CommentAction(c *gin.Context) {
 		q.CommentText,
 		q.CommentID,
 	)
-	fmt.Println(comment)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, models.Response{
 			StatusCode: -1,
