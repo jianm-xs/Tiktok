@@ -81,12 +81,12 @@ func FollowerList(c *gin.Context) {
 
 	// 返回的结果
 	var result models.FollowList
-
-	// 获取请求的 token和userId
-	userId := c.DefaultQuery("user_id", "")
+	var queryId, userId int64
+	// 获取请求的 token 和 queryId
+	queryId, _ = strconv.ParseInt(c.DefaultQuery("user_id", "-1"), 10, 64)
 	token := c.DefaultQuery("token", "")
 	// 参数获取失败
-	if userId == "" || token == "" {
+	if queryId == -1 {
 		result.StatusCode = -1
 		result.StatusMsg = "failed to obtain parameters!"
 		result.UserList = nil
@@ -94,20 +94,18 @@ func FollowerList(c *gin.Context) {
 		return
 	}
 
-	// 校验 token
-	// token 无效
-	if ok, err := utils.CheckToken(token, userId); !ok {
-		// 记录校验失败 err
+	// 解析 token
+	myClaims, err := utils.ParseToken(token)
+	// token 解析失败
+	if err != nil {
 		log.Println(err)
-		result.StatusCode = -2
-		result.StatusMsg = "token error!"
-		result.UserList = nil
-		c.JSON(http.StatusOK, result)
-		return
+		userId = -1 // 说明 token 无效，设置一个不可能存在的 userID, 这样就不影响查找
+	} else { // 如果 token 解析成功，获取 userId
+		userId, _ = strconv.ParseInt(myClaims.Uid, 10, 64)
 	}
 
 	// 获取粉丝列表
-	result.UserList = dao.GetFollowerUserList(userId)
+	result.UserList = dao.GetFollowerUserList(userId, queryId)
 
 	result.StatusCode = 0
 	result.StatusMsg = "success!"
