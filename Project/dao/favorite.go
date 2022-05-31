@@ -15,13 +15,14 @@ import (
 //		如果操作成功，返回 nil， 否则返回错误信息
 func FavoriteAction(userId, videoId, actionType int64) error {
 	if actionType == 1 {
-		// 如果是关注操作，插入即可
+		// 如果是点赞操作，插入即可
 		favorite := models.Favorite{
 			UserID:     userId,
 			VideoID:    videoId,
 			CreateTime: time.Now(),
 		}
 		// 插入操作
+		// 点赞数 + 1
 		err := DB.Debug().Model(&models.Video{ID: videoId}).UpdateColumn("favorite_count", gorm.Expr("favorite_count + 1")).Error
 		if err != nil {
 			return err // 视频的点赞数加一
@@ -29,6 +30,7 @@ func FavoriteAction(userId, videoId, actionType int64) error {
 		err = DB.Debug().Create(&favorite).Error // 插入这条点赞记录
 		return err
 	} else {
+		// 视频点赞数 - 1
 		err := DB.Debug().Model(&models.Video{ID: videoId}).UpdateColumn("favorite_count", gorm.Expr("favorite_count - 1")).Error
 		if err != nil {
 			return err // 视频点赞 -1 失败
@@ -49,9 +51,10 @@ func GetFavoriteList(userId int64) []models.Video {
 	var videos []models.Video
 
 	// 查询 follow
-	queryFollow := DB.Select("follow.user_id, 1 as is_follow").
-		Where("follower_id = ?", userId).
-		Table("follow")
+	queryFollow := DB.Raw("? UNION ALL ?",
+		DB.Select("? as user_id, 1 as is_follow", userId).Table("follow"),                            // 自己不能关注自己
+		DB.Select("follow.user_id, 1 as is_follow").Where("follower_id = ?", userId).Table("follow"), // 查找当前用户关注的所有用户
+	)
 
 	// 查询点赞
 	queryFavorite := DB.Select("video_id,create_time,1 as is_favorite").

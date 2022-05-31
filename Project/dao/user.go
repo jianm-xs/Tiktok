@@ -92,7 +92,10 @@ func UserRegister(username string, password string) int64 {
 func GetUserInfo(queryId int64, userId int64) models.User {
 	var user models.User // 结果
 	// 查看是否关注该用户
-	queryFollow := DB.Select("follow.user_id, 1 as is_follow").Where("follower_id = ?", userId).Table("follow")
+	queryFollow := DB.Raw("? UNION ALL ?",
+		DB.Select("? as user_id, 1 as is_follow", userId).Table("follow"),                            // 自己不能关注自己
+		DB.Select("follow.user_id, 1 as is_follow").Where("follower_id = ?", userId).Table("follow"), // 查找当前用户关注的所有用户
+	)
 	// 查询该用户信息
 	DB.Select("user.*, is_follow").
 		// 条件筛选，按 user_id 查找
