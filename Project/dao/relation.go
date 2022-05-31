@@ -110,7 +110,7 @@ func GetFollowerUserList(userId int64, queryId int64) []models.User {
 	)
 	// 查找 queryID 的粉丝
 	queryQueryFollow := DB.Debug().Table("follow").
-		Select("fo.user_id, is_follow").
+		Select("follow.follower_id AS user_id, is_follow").
 		Where("follow.user_id = ?", queryId).
 		// 联结当前用户关注的人，完成 is_follow 查询
 		Joins("LEFT JOIN (?) AS fo ON fo.user_id = follow.follower_id", queryUserFollow)
