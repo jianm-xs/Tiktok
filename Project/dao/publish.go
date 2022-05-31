@@ -45,11 +45,11 @@ func GetVideoList(authorId int64, userId int64) []models.Video {
 	// 查询结果
 	var videos []models.Video
 
-	// 查询 follow
-	queryFollow := DB.Raw("? UNION ALL ?",
-		DB.Select("? as user_id, 1 as is_follow", userId).Table("follow"),                            // 自己不能关注自己
-		DB.Select("follow.user_id, 1 as is_follow").Where("follower_id = ?", userId).Table("follow"), // 查找当前用户关注的所有用户
-	)
+	// 查找当前用户关注的所有用户
+	queryFollow := DB.Select("follow.user_id, 1 as is_follow").
+		Where("follower_id = ?", userId).
+		Table("follow")
+
 	// 查询评论
 	queryComment := DB.Select("video_id, COUNT(1) AS comment_count").Group("video_id").Table("comment")
 	// 查询点赞
