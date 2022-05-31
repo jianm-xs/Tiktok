@@ -4,7 +4,6 @@ import (
 	"Project/dao"
 	"Project/models"
 	"Project/utils"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
@@ -65,8 +64,7 @@ func FollowList(c *gin.Context) {
 	} else { // 如果 token 解析成功，获取 userId
 		userId, _ = strconv.ParseInt(myClaims.Uid, 10, 64)
 	}
-	fmt.Println(userId)
-	result.UserList, err = dao.GetFollowList(queryId)
+	result.UserList, err = dao.GetFollowList(queryId, userId)
 	if err != nil {
 		result.Response.StatusCode = -1 // 查询失败
 		result.Response.StatusMsg = "search error!"

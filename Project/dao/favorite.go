@@ -16,7 +16,7 @@ import (
 //		如果操作成功，返回 nil， 否则返回错误信息
 func FavoriteAction(userId, videoId, actionType int64) error {
 	var count int64 // 查看有没有对应的 video-user 对
-	DB.Table("favorite").Select("favorite_id = ? AND video_id = ?", userId, videoId).Count(&count)
+	DB.Table("favorite").Where("favorite_id = ? AND video_id = ?", userId, videoId).Count(&count)
 	if count+actionType == 2 {
 		// count 只有 1 和 0
 		// 如果 count = 0,那么不能删除(actionType != 2)
