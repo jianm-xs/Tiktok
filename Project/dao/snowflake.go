@@ -34,28 +34,28 @@ const (
 	sequenceMask       int64 = -1 ^ (-1 << sequenceBits)                      // 生成序列的掩码，这里为4095(0b111111111111)
 )
 
-// 注册 ID 生成器
+// RegisterIdWorker 注册 ID 生成器
 var RegisterIdWorker *SnowflakeIdWorker
 
-// 视频 ID 生成器
+// VideoIdWorker 视频 ID 生成器
 var VideoIdWorker *SnowflakeIdWorker
 
-// 评论 ID 生成器
+// CommentIdWorker 评论 ID 生成器
 var CommentIdWorker *SnowflakeIdWorker
 
-// 粉丝 ID 生成器
+// FollowIdWorker 粉丝 ID 生成器
 var FollowIdWorker *SnowflakeIdWorker
 
-// 点赞 ID 生成器
+// FavoriteIdWorker 点赞 ID 生成器
 var FavoriteIdWorker *SnowflakeIdWorker
 
 // 根据 workerId ， dataCenterId ,创建 ID 生成器
 func createWorker(wId int64, dId int64) (*SnowflakeIdWorker, error) {
 	if wId < 0 || wId > maxWorkerId {
-		return nil, errors.New("Worker ID excess of quantity")
+		return nil, errors.New("worker ID excess of quantity")
 	}
 	if dId < 0 || dId > maxDataCenterId {
-		return nil, errors.New("Datacenter ID excess of quantity")
+		return nil, errors.New("datacenter ID excess of quantity")
 	}
 	// 生成一个新节点
 	return &SnowflakeIdWorker{
@@ -66,7 +66,7 @@ func createWorker(wId int64, dId int64) (*SnowflakeIdWorker, error) {
 	}, nil
 }
 
-// 初始化所有 ID 生成器
+// InitIdWorker 初始化所有 ID 生成器
 func InitIdWorker() error {
 	//	创建 注册 ID 生成器
 	registerIdWorker, err := createWorker(config.SnowFlakeCfg.WorkerId, config.SnowFlakeCfg.DateCenterId)
@@ -103,7 +103,7 @@ func InitIdWorker() error {
 	return err
 }
 
-// 获取 ID ，ID 生成异常，返回-1与错误信息
+// NextId 获取 ID ，ID 生成异常，返回-1与错误信息
 func (w *SnowflakeIdWorker) NextId() (int64, error) {
 	// 保障线程安全 加锁
 	w.mutex.Lock()
@@ -114,7 +114,7 @@ func (w *SnowflakeIdWorker) NextId() (int64, error) {
 	// 如果当前时间小于上一次ID生成的时间戳，说明系统时钟回退过这个时候应当抛出异常
 	if now < w.lastTimestamp {
 		// 异常，生成 ID 失败
-		return -1, errors.New("Clock moved backwards")
+		return -1, errors.New("clock moved backwards")
 	}
 	// 同一时间戳下生成 ID ，增加序列号
 	if w.lastTimestamp == now {
