@@ -6,6 +6,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"log"
+	"strconv"
 	"time"
 )
 
@@ -99,5 +100,21 @@ func GetUserInfo(queryId int64, userId int64) models.User {
 		// 联结是否关注
 		Joins("LEFT JOIN (?) AS fo ON fo.user_id = user.user_id", queryFollow).
 		First(&user)
+	return user
+}
+
+// GetFollowerUserList 查询粉丝信息，返回粉丝列表
+// 参数 :
+//		userId : 用户的 id
+// 返回值：
+//		返回根据用户id查询出的粉丝列表
+func GetFollowerUserList(id string) []models.User {
+	var user []models.User // 结果
+	// 查询用户的粉丝id
+	var userId int64
+	userId, _ = strconv.ParseInt(id, 10, 64)
+	// 查询 follow
+	DB.Table("user").Select("user.user_id,user.name,user.`follow_count`,user.`follower_count`,1 AS is_follow").
+		Joins("LEFT JOIN `follow` AS f ON user.`user_id`=f.`follower_id` AND user.`user_id`= ? ", userId).Find(&user)
 	return user
 }

@@ -64,11 +64,36 @@ func FollowList(c *gin.Context) {
 
 // FollowerList 粉丝列表
 func FollowerList(c *gin.Context) {
+
+	// 返回的结果
+	var result models.Response
+
+	// 获取请求的 token和userId
+	userId := c.DefaultQuery("userId", "")
+	token := c.DefaultQuery("token", "")
+
+	//token解析
+	myClaims, err := ParseToken(token)
+	if err != nil { // token 解析失败
+		result.StatusCode = -2            // 失败，设置状态码和描述
+		result.StatusMsg = "token error!" // token 有误
+		c.JSON(http.StatusOK, result)     // 设置返回的信息
+		return
+	}
+
+	//返回的粉丝信息
+	var userList []models.User
+	//如果token解析出的userId与请求中的userId相同，则拥有权限获取粉丝列表
+	if myClaims.Uid == userId {
+		//获取粉丝列表
+		userList = dao.GetFollowerUserList(userId)
+	}
+
 	c.JSON(http.StatusOK, models.FollowList{
 		Response: models.Response{
 			StatusCode: 0,
 			StatusMsg:  "success!",
 		},
-		UserList: nil,
+		UserList: userList,
 	})
 }

@@ -32,7 +32,6 @@ type MyClaims struct {
 var MySecret = []byte("密钥")
 
 //生成 Token
-
 func GenToken(uid string) (string, error) {
 	// 创建一个我们自己的声明
 	c := MyClaims{
