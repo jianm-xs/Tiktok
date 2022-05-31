@@ -28,6 +28,7 @@ type snowflakeConfig struct {
 }
 
 // 本机器的雪花 ID 配置
+
 var SnowFlakeCfg = snowflakeConfig{
 	WorkerId:     0,
 	DateCenterId: 0,
