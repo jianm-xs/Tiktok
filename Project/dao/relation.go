@@ -18,6 +18,14 @@ func RelationAction(userId, toUserId, actionType int64) error {
 	if userId == toUserId { // 如果是自己对自己操作，不管
 		return errors.New("you cannot operate on yourself")
 	}
+	var count int64 // 查看有没有对应的 user-follower 对
+	DB.Table("follow").Select("user_id = ? AND follower_id = ?", toUserId, userId).Count(&count)
+	if count+actionType == 2 {
+		// count 只有 1 和 0
+		// 如果 count = 0,那么不能删除(actionType != 2)
+		// 如果 count = 1，那么不可以继续插入(actionType != 1)
+		return errors.New("action error")
+	}
 	if actionType == 1 {
 		// 如果是关注操作，插入即可
 		follow := models.Follow{
