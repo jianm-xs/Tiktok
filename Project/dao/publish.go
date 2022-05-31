@@ -6,6 +6,7 @@ package dao
 
 import (
 	"Project/models"
+	"Project/utils"
 	"gorm.io/gorm"
 	"time"
 )
@@ -21,7 +22,9 @@ import (
 
 func CreateVideoByData(title string, authorId int64, playUrl string, coverUrl string) error {
 	// 存储相关路径
+	id, _ := utils.VideoIdWorker.NextId()
 	video := models.Video{
+		ID:         id,         // 雪花 ID
 		AuthorID:   authorId,   // 作者的 id
 		Title:      title,      // 视频标题
 		PlayUrl:    playUrl,    // 播放地址
