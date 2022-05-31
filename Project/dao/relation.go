@@ -4,6 +4,7 @@ import (
 	"Project/models"
 	"errors"
 	"gorm.io/gorm"
+	"strconv"
 	"time"
 )
 
@@ -74,4 +75,32 @@ func GetFollowList(userId int64) ([]models.User, error) {
 		Joins("LEFT JOIN user ON user.user_id = follow.user_id").
 		Find(&users).Error
 	return users, err
+}
+
+// GetFollowerUserList 查询粉丝信息，返回粉丝列表
+// 参数 :
+//		userId : 用户的 id
+// 返回值：
+//		返回根据用户id查询出的粉丝列表
+func GetFollowerUserList(id string) []models.User {
+	var user []models.User // 结果
+	// 查询用户id
+	var userId int64
+	userId, _ = strconv.ParseInt(id, 10, 64)
+	// 查询 follow
+	queryFollow := DB.Raw("? UNION ALL ?",
+		DB.Select("? as user_id, 1 as is_follow", userId).Table("follow"),                            // 自己不能关注自己
+		DB.Select("follow.user_id, 1 as is_follow").Where("follower_id = ?", userId).Table("follow"), // 查找当前用户关注的所有用户
+	)
+
+	// 查询 follower
+	DB.Table("user").
+		Select("user.*,is_follow").
+		// 联结粉丝
+		Joins("JOIN `follow` AS f ON user.`user_id`=f.`follower_id` AND f.`user_id`= ? ", userId).
+		// 联结关注
+		Joins("LEFT JOIN (?) AS fo ON user.user_id = fo.user_id", queryFollow).
+		Find(&user)
+
+	return user
 }

@@ -6,6 +6,7 @@ import (
 	"Project/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -77,11 +78,38 @@ func FollowList(c *gin.Context) {
 
 // FollowerList 粉丝列表
 func FollowerList(c *gin.Context) {
-	c.JSON(http.StatusOK, models.FollowList{
-		Response: models.Response{
-			StatusCode: 0,
-			StatusMsg:  "success!",
-		},
-		UserList: nil,
-	})
+
+	// 返回的结果
+	var result models.FollowList
+
+	// 获取请求的 token和userId
+	userId := c.DefaultQuery("user_id", "")
+	token := c.DefaultQuery("token", "")
+	// 参数获取失败
+	if userId == "" || token == "" {
+		result.StatusCode = -1
+		result.StatusMsg = "failed to obtain parameters!"
+		result.UserList = nil
+		c.JSON(http.StatusOK, result)
+		return
+	}
+
+	// 校验 token
+	// token 无效
+	if ok, err := utils.CheckToken(token, userId); !ok {
+		// 记录校验失败 err
+		log.Println(err)
+		result.StatusCode = -2
+		result.StatusMsg = "token error!"
+		result.UserList = nil
+		c.JSON(http.StatusOK, result)
+		return
+	}
+
+	// 获取粉丝列表
+	result.UserList = dao.GetFollowerUserList(userId)
+
+	result.StatusCode = 0
+	result.StatusMsg = "success!"
+	c.JSON(http.StatusOK, result)
 }
