@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+// follow 结构体，用于查询关注列表
+type follow struct {
+	userId int64 `gorm:"user_id"`
+	follow bool  `gorm:"is_follow"`
+}
+
 // GetVideos : 执行数据库查询，查找时间小于 lastTime 的前 30 个视频
 // 参数 :
 //      lastTime : 视频最晚时间，可以为空
@@ -19,8 +25,10 @@ func GetVideos(lastTime string, userId int64) []models.Video {
 		lastTime = time.Now().Format("2006-01-02 15:04:05")
 	}
 	// 查询 follow
-	queryFollow := DB.Select("follow.user_id, 1 as is_follow").Where("follower_id = ?", userId).Table("follow")
-
+	queryFollow := DB.Raw("? UNION ALL ?",
+		DB.Select("? as user_id, 1 as is_follow", userId).Table("follow"),                            // 自己不能关注自己
+		DB.Select("follow.user_id, 1 as is_follow").Where("follower_id = ?", userId).Table("follow"), // 查找当前用户关注的所有用户
+	)
 	// 查询评论
 	queryComment := DB.Select("video_id, COUNT(1) AS comment_count").Group("video_id").Table("comment")
 	// 查询点赞
