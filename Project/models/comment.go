@@ -11,7 +11,7 @@ type Comment struct {
 	Content    string    `gorm:"column:content" json:"content"`                  // 评论内容
 	IsDelete   bool      `gorm:"column:is_delete" json:"is_delete"`              // 是否被删除
 	CreateTime time.Time `gorm:"column:create_time" json:"create_date"`          // 创建时间
-	UpdateTime time.Time `gorm:"-" json:"-"`                                     // 更新时间
+	UpdateTime time.Time `gorm:"column:update_time" json:"-"`                    // 更新时间
 }
 
 // CommentActionResponse 评论操作，返回评论

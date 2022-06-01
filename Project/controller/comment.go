@@ -4,6 +4,7 @@ import (
 	"Project/dao"
 	"Project/models"
 	"Project/utils"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -12,12 +13,12 @@ import (
 // CommentAction 评论操作
 func CommentAction(c *gin.Context) {
 	var q models.CommentActionRequest
-	q.Token = c.DefaultPostForm("token", "")
-	q.VideoID = utils.String2int64(c.DefaultPostForm("video_id", ""))
-	q.ActionType = int(utils.String2int64(c.DefaultPostForm("action_type", "-1")))
-	q.CommentText = c.DefaultPostForm("comment_text", "")
-	q.CommentID = utils.String2int64(c.DefaultPostForm("comment_id", "-1"))
-
+	q.Token = c.DefaultQuery("token", "")
+	q.VideoID = utils.String2int64(c.DefaultQuery("video_id", ""))
+	q.ActionType = int(utils.String2int64(c.DefaultQuery("action_type", "-1")))
+	q.CommentText = c.DefaultQuery("comment_text", "")
+	q.CommentID = utils.String2int64(c.DefaultQuery("comment_id", "-1"))
+	fmt.Println("===============>", q)
 	// 从 token 解析 user_id
 	myClaims, err := utils.ParseToken(q.Token)
 	if err != nil { // token 解析失败

@@ -108,8 +108,8 @@ func CreateComment(userID int64, videoID int64,
 		VideoID:    videoID,
 		Content:    ctx,
 		IsDelete:   false,
-		CreateTime: time.Time{},
-		UpdateTime: time.Time{},
+		CreateTime: time.Now(),
+		UpdateTime: time.Now(),
 	}
 	result := DB.Debug().Create(&comment)
 	if result.Error != nil {
