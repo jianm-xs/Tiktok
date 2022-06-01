@@ -28,7 +28,8 @@ func RelationAction(userId, toUserId, actionType int64) error {
 		// 如果 count = 1，那么不可以继续插入(actionType != 1)
 		return errors.New("action error")
 	}
-	if actionType == 1 {
+	switch actionType {
+	case PUBLISH:
 		// 如果是关注操作，插入即可
 		follow := models.Follow{
 			AuthorID:   userId,
@@ -37,32 +38,40 @@ func RelationAction(userId, toUserId, actionType int64) error {
 		}
 		// 插入操作
 		// 被关注用户的被关注数 + 1
-		err := DB.Debug().Model(&models.User{ID: toUserId}).UpdateColumn("follower_count", gorm.Expr("follower_count + 1")).Error
+		err := DB.Debug().Model(&models.User{ID: toUserId}).
+			UpdateColumn("follower_count", gorm.Expr("follower_count + 1")).Error
 		if err != nil {
 			return err
 		}
 		// 当前用户的关注数 + 1
-		err = DB.Debug().Model(&models.User{ID: userId}).UpdateColumn("follow_count", gorm.Expr("follower_count + 1")).Error
+		err = DB.Debug().Model(&models.User{ID: userId}).
+			UpdateColumn("follow_count", gorm.Expr("follow_count + 1")).Error
 		if err != nil {
 			return err
 		}
 		// 插入关注记录
 		err = DB.Debug().Create(&follow).Error
 		return err
-	} else {
+	case DELETE:
 		// 被关注用户的被关注数 - 1
-		err := DB.Debug().Model(&models.User{ID: toUserId}).UpdateColumn("follower_count", gorm.Expr("follower_count - 1")).Error
+		err := DB.Debug().Model(&models.User{ID: toUserId}).
+			UpdateColumn("follower_count", gorm.Expr("follower_count - 1")).Error
 		if err != nil {
 			return err
 		}
 		// 当前用户的被关注数 - 1
-		err = DB.Debug().Model(&models.User{ID: userId}).UpdateColumn("follow_count", gorm.Expr("follow_count - 1")).Error
+		err = DB.Debug().Model(&models.User{ID: userId}).
+			UpdateColumn("follow_count", gorm.Expr("follow_count - 1")).Error
 		if err != nil {
 			return err
 		}
 		// 删除关注记录
-		err = DB.Debug().Delete(models.Follow{}, "user_id = ? and follower_id = ?", toUserId, userId).Error
+		err = DB.Debug().
+			Delete(models.Follow{}, "user_id = ? and follower_id = ?", toUserId, userId).Error
 		return err
+	default:
+		// 防御性
+		return errors.New("invalid operation")
 	}
 }
 
@@ -77,7 +86,8 @@ func GetFollowList(queryId, userId int64) ([]models.User, error) {
 	// 查找当前用户关注的所有用户
 	queryUserFollow := DB.Raw("(?) UNION ALL (?)",
 		DB.Raw("SELECT ? as user_id, 1 as is_follow", userId),                                        // 自己不能关注自己
-		DB.Select("follow.user_id, 1 as is_follow").Where("follower_id = ?", userId).Table("follow"), // 查找当前用户关注的所有用户
+		DB.Select("follow.user_id, 1 as is_follow").
+		Where("follower_id = ?", userId).Table("follow"), // 查找当前用户关注的所有用户
 	)
 	// 查找 queryID 关注的用户
 	queryQueryFollow := DB.Debug().Table("follow").
@@ -106,7 +116,9 @@ func GetFollowerUserList(userId int64, queryId int64) []models.User {
 	// 查找当前用户关注的所有用户
 	queryUserFollow := DB.Raw("(?) UNION ALL (?)",
 		DB.Raw("SELECT ? as user_id, 1 as is_follow", userId),                                        // 自己不能关注自己
-		DB.Select("follow.user_id, 1 as is_follow").Where("follower_id = ?", userId).Table("follow"), // 查找当前用户关注的所有用户
+		DB.Select("follow.user_id, 1 as is_follow").
+		Where("follower_id = ?", userId).
+		Table("follow"), // 查找当前用户关注的所有用户
 	)
 	// 查找 queryID 的粉丝
 	queryQueryFollow := DB.Debug().Table("follow").
