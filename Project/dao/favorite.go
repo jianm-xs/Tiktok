@@ -23,7 +23,8 @@ func FavoriteAction(userId, videoId, actionType int64) error {
 		// 如果 count = 1，那么不可以继续插入(actionType != 1)
 		return errors.New("action error")
 	}
-	if actionType == 1 {
+	switch actionType {
+	case PUBLISH:
 		// 如果是点赞操作，插入即可
 		favorite := models.Favorite{
 			UserID:     userId,
@@ -38,7 +39,7 @@ func FavoriteAction(userId, videoId, actionType int64) error {
 		}
 		err = DB.Debug().Create(&favorite).Error // 插入这条点赞记录
 		return err
-	} else {
+	case DELETE:
 		// 视频点赞数 - 1
 		err := DB.Debug().Model(&models.Video{ID: videoId}).UpdateColumn("favorite_count", gorm.Expr("favorite_count - 1")).Error
 		if err != nil {
@@ -46,6 +47,9 @@ func FavoriteAction(userId, videoId, actionType int64) error {
 		}
 		err = DB.Debug().Delete(models.Favorite{}, "favorite_id = ? and video_id = ?", userId, videoId).Error // 删除这条点赞记录
 		return err
+	default:
+		// 防御性
+		return errors.New("invalid operation")
 	}
 }
 
