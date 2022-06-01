@@ -6,30 +6,32 @@ import (
 	"Project/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
 // CommentAction 评论操作
 func CommentAction(c *gin.Context) {
 	var q models.CommentActionRequest
-	q.UserID = utils.String2int64(c.DefaultPostForm("user_id", "-1"))
 	q.Token = c.DefaultPostForm("token", "")
 	q.VideoID = utils.String2int64(c.DefaultPostForm("video_id", ""))
 	q.ActionType = int(utils.String2int64(c.DefaultPostForm("action_type", "-1")))
 	q.CommentText = c.DefaultPostForm("comment_text", "")
 	q.CommentID = utils.String2int64(c.DefaultPostForm("comment_id", "-1"))
 
-	// Token 匹配？
-	uidStr := c.DefaultPostForm("user_id", "-1")
-	if ok, err := utils.CheckToken(q.Token, uidStr); err != nil || ok != true {
-		c.JSON(http.StatusBadRequest, models.Response{
-			StatusCode: -3,
-			StatusMsg:  "authentication failed",
+	// 从 token 解析 user_id
+	myClaims, err := utils.ParseToken(q.Token)
+	if err != nil { // token 解析失败
+		c.JSON(http.StatusOK, models.Response{
+			StatusCode: -2,
+			StatusMsg:  "token error!",
 		})
 		return
+	} else { // 如果 token 解析成功，获取 userId
+		q.UserID, _ = strconv.ParseInt(myClaims.Uid, 10, 64)
 	}
 
 	var comment *models.Comment
-	comment, err := dao.PerformCommentAction(
+	comment, err = dao.PerformCommentAction(
 		q.UserID,
 		q.VideoID,
 		q.ActionType,
