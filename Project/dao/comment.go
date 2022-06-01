@@ -4,6 +4,7 @@ import (
 	"Project/models"
 	"Project/utils"
 	"errors"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -108,8 +109,8 @@ func CreateComment(userID int64, videoID int64,
 		VideoID:    videoID,
 		Content:    ctx,
 		IsDelete:   false,
-		CreateTime: time.Time{},
-		UpdateTime: time.Time{},
+		CreateTime: utils.JsonTime(time.Now()),
+		UpdateTime: time.Now(),
 	}
 	result := DB.Debug().Create(&comment)
 	if result.Error != nil {
@@ -117,4 +118,38 @@ func CreateComment(userID int64, videoID int64,
 		return nil, result.Error
 	}
 	return &comment, nil
+}
+
+// GetCommentList 返回评论列表
+// param:
+//		userID: 请求的用户 id
+// 		videoID: 评论所属的视频 id
+// 返回值：
+//		操作成功：返回评论列表
+// 		操作失败：返回报错信息
+func GetCommentList(userId, videoId int64) ([]models.Comment, error) {
+	var comments []models.Comment
+	// 查询 follow
+	queryFollow := DB.Raw("? UNION ALL ?",
+		DB.Select("? as user_id, 1 as is_follow", userId).Table("follow"),                            // 自己不能关注自己
+		DB.Select("follow.user_id, 1 as is_follow").Where("follower_id = ?", userId).Table("follow"), // 查找当前用户关注的所有用户
+	)
+	err := DB.Debug().Table("comment").
+		// 预加载 User，给 user 表加上 is_follow 字段再查找
+		Preload("Author", func(db *gorm.DB) *gorm.DB {
+			return db.Select("user.*, is_follow").
+				Joins("LEFT JOIN (?) AS fo ON user.user_id = fo.user_id", queryFollow).
+				Table("user")
+		}).
+		// 选择返回的字段
+		Select("comment.*").
+		// 按照创建时间降序排列，即时间最晚的在前面
+		Order("comment.create_time DESC").
+		// 筛选条件，video_id
+		Where("comment.video_id = ?", videoId).
+		Find(&comments).Error
+	if err != nil { // 查询出错
+		return nil, err
+	}
+	return comments, nil // 查询成功
 }

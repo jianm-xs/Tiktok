@@ -4,6 +4,7 @@ import (
 	"Project/dao"
 	"Project/models"
 	"Project/utils"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -12,12 +13,12 @@ import (
 // CommentAction 评论操作
 func CommentAction(c *gin.Context) {
 	var q models.CommentActionRequest
-	q.Token = c.DefaultPostForm("token", "")
-	q.VideoID = utils.String2int64(c.DefaultPostForm("video_id", ""))
-	q.ActionType = int(utils.String2int64(c.DefaultPostForm("action_type", "-1")))
-	q.CommentText = c.DefaultPostForm("comment_text", "")
-	q.CommentID = utils.String2int64(c.DefaultPostForm("comment_id", "-1"))
-
+	q.Token = c.DefaultQuery("token", "")
+	q.VideoID = utils.String2int64(c.DefaultQuery("video_id", ""))
+	q.ActionType = int(utils.String2int64(c.DefaultQuery("action_type", "-1")))
+	q.CommentText = c.DefaultQuery("comment_text", "")
+	q.CommentID = utils.String2int64(c.DefaultQuery("comment_id", "-1"))
+	fmt.Println("===============>", q)
 	// 从 token 解析 user_id
 	myClaims, err := utils.ParseToken(q.Token)
 	if err != nil { // token 解析失败
@@ -65,11 +66,40 @@ func CommentAction(c *gin.Context) {
 
 // CommentList 评论列表
 func CommentList(c *gin.Context) {
-	c.JSON(http.StatusOK, models.CommentListResponse{
-		Response: models.Response{
-			StatusCode: 0,
-			StatusMsg:  "success!",
-		},
-		CommentList: nil,
-	})
+	var result models.CommentListResponse
+	// 获取请求参数
+	token := c.DefaultQuery("token", "")
+	video_id, err := strconv.ParseInt(c.DefaultQuery("video_id", "-1"), 10, 64)
+	if err != nil { // 获取视频 id 错误
+		result.Response.StatusCode = -1
+		result.Response.StatusMsg = "git video_id error!"
+		c.JSON(http.StatusOK, result)
+		return
+	}
+	// 获取当前用户 id
+	var userId int64
+	myClaims, err := utils.ParseToken(token)
+	if err != nil { // token 解析失败
+		result.Response.StatusCode = -2
+		result.Response.StatusMsg = "token error!"
+		c.JSON(http.StatusOK, result)
+		return
+	} else { // 如果 token 解析成功，获取 userId
+		userId, _ = strconv.ParseInt(myClaims.Uid, 10, 64)
+	}
+	// 获取评论列表
+	result.CommentList, err = dao.GetCommentList(userId, video_id)
+	if err != nil { // 如果获取评论列表失败
+		result.Response = models.Response{
+			StatusCode: -3,
+			StatusMsg:  err.Error(),
+		}
+		c.JSON(http.StatusOK, result)
+		return
+	}
+	result.Response = models.Response{
+		StatusCode: 0,
+		StatusMsg:  "success",
+	}
+	c.JSON(http.StatusOK, result)
 }
