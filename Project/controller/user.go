@@ -64,7 +64,7 @@ func Register(c *gin.Context) {
 		return
 	}
 	// 生成token
-	tokenStr, _ := utils.GenToken(string(uid))
+	tokenStr, _ := utils.GenToken(strconv.FormatInt(uid, 10))
 
 	result.Response.StatusCode = 0
 	result.Response.StatusMsg = "success！"
