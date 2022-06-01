@@ -57,10 +57,10 @@ var FavoriteIdWorker *SnowflakeIdWorker
 // 根据 workerId ， dataCenterId ,创建 ID 生成器
 func createWorker(wId int64, dId int64) (*SnowflakeIdWorker, error) {
 	if wId < 0 || wId > maxWorkerId {
-		return nil, errors.New("Worker ID excess of quantity")
+		return nil, errors.New("worker ID excess of quantity")
 	}
 	if dId < 0 || dId > maxDataCenterId {
-		return nil, errors.New("Datacenter ID excess of quantity")
+		return nil, errors.New("datacenter ID excess of quantity")
 	}
 	// 生成一个新节点
 	return &SnowflakeIdWorker{
@@ -121,7 +121,7 @@ func (w *SnowflakeIdWorker) NextId() (int64, error) {
 	// 如果当前时间小于上一次ID生成的时间戳，说明系统时钟回退过这个时候应当抛出异常
 	if now < w.lastTimestamp {
 		// 异常，生成 ID 失败
-		return -1, errors.New("Clock moved backwards")
+		return -1, errors.New("clock moved backwards")
 	}
 	// 同一时间戳下生成 ID ，增加序列号
 	if w.lastTimestamp == now {

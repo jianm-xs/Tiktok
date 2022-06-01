@@ -57,7 +57,8 @@ func Publish(context *gin.Context) {
 	// 获取当前时间戳
 	fileNameInt := time.Now().Unix()
 	// 文件名是时间戳 + 作者 id
-	fileNameStr := strconv.FormatInt(fileNameInt, 10) + strconv.FormatInt(authorId, 10)
+	fileNameStr := strconv.FormatInt(fileNameInt, 10) +
+		strconv.FormatInt(authorId, 10)
 
 	// 带扩展名的文件名
 	sb.WriteString(fileNameStr)
