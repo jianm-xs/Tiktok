@@ -6,6 +6,7 @@ package controller
 
 import (
 	"Project/common"
+	"Project/config"
 	"Project/dao"
 	"Project/models"
 	"Project/utils"
@@ -113,9 +114,9 @@ func Publish(context *gin.Context) {
 	}
 
 	// 播放地址为服务器地址 + 文件路径
-	playUrl := "http://81.70.17.190:1080/" + filePath
+	playUrl := "http://" + config.ServerHost + config.ServerPort + "/" + filePath
 
-	coverUrl := "http://81.70.17.190:1080/" + coverPath
+	coverUrl := "http://" + config.ServerHost + config.ServerPort + "/" + coverPath
 	fmt.Println("playUrl: ", playUrl)
 
 	err = dao.CreateVideoByData(title, authorId, playUrl, coverUrl)

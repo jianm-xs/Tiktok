@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Project/config"
 	"Project/dao"
 	"Project/utils"
 	"github.com/gin-gonic/gin"
@@ -21,7 +22,7 @@ func init() {
 func main() {
 	r := gin.Default() // 创建 Gin 引擎
 	initRouter(r)
-	err := r.Run(":1080") // 启动 Gin 引擎，监听 1080 端口
+	err := r.Run(config.ServerPort) // 启动 Gin 引擎，监听 1080 端口
 	if err != nil {
 		return
 	}

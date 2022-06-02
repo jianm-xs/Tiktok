@@ -33,3 +33,9 @@ var SnowFlakeCfg = snowflakeConfig{
 	WorkerId:     0,
 	DateCenterId: 0,
 }
+
+// ServerHost 服务器地址
+var ServerHost = "81.70.17.190"
+
+// ServerPort 服务端口
+var ServerPort = ":1080"
