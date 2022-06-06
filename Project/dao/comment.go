@@ -1,3 +1,7 @@
+// comment 包，该包包含了评论的数据库操作
+// 创建人：龚江炜
+// 创建时间：2022-5-25
+
 package dao
 
 import (
@@ -86,7 +90,7 @@ func CreateComment(userID int64, videoID int64,
 	if ctx == "" {
 		return nil, errors.New("comment must not be null or empty string")
 	}
-	id, err := utils.CommentIdWorker.NextId()
+	id, err := utils.CommentIDWorker.NextID()
 	if err != nil {
 		// 生成 ID 异常
 		return nil, err

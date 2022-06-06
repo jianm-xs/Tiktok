@@ -26,7 +26,7 @@ type VideoListResponse struct {
 // UserLoginResponse 用户登录接口响应对象，定义了用户登录响应的基本内容
 type UserLoginResponse struct {
 	Response        // 状态码、状态描述
-	UserId   int64  `json:"user_id,omitempty"` // 用户 id
+	UserID   int64  `json:"user_id,omitempty"` // 用户 id
 	Token    string `json:"token"`             // 用户鉴权 token
 }
 

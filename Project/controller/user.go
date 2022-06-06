@@ -1,4 +1,4 @@
-// feed 包，该包封装了用户相关的接口
+// user 包，该包封装了用户相关的接口
 // 创建人：龚江炜
 // 创建时间：2022-5-14
 
@@ -25,7 +25,7 @@ func Login(c *gin.Context) {
 	userPassword := c.Query("password")
 	// 数据库查询，判断用户名和密码是否匹配
 	// 如果匹配，返回 user_id 到 result 中
-	err := dao.UserLogin(&result.UserId, userName, userPassword)
+	err := dao.UserLogin(&result.UserID, userName, userPassword)
 	if err != nil {
 		// 用户名和密码匹配不成功，则返回错误信息
 		result.StatusCode = -1
@@ -34,7 +34,7 @@ func Login(c *gin.Context) {
 		return
 	}
 	// 根据 user_id 获取 token 返回
-	result.Token, err = utils.GenToken(strconv.FormatInt(result.UserId, 10))
+	result.Token, err = utils.GenToken(strconv.FormatInt(result.UserID, 10))
 	if err != nil {
 		// 生成 token 失败，则返回错误信息
 		result.StatusCode = -2
@@ -58,7 +58,7 @@ func Register(c *gin.Context) {
 	if uid == -1 { // 注册失败
 		result.Response.StatusCode = -1
 		result.Response.StatusMsg = "fail to register！"
-		result.UserId = uid
+		result.UserID = uid
 		result.Token = ""
 		c.JSON(http.StatusOK, result)
 		return
@@ -68,7 +68,7 @@ func Register(c *gin.Context) {
 
 	result.Response.StatusCode = 0
 	result.Response.StatusMsg = "success！"
-	result.UserId = uid
+	result.UserID = uid
 	result.Token = tokenStr
 	c.JSON(http.StatusOK, result)
 	return
