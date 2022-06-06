@@ -1,3 +1,7 @@
+// comment 包，该包包含了评论的相关模型定义
+// 创建人：龚江炜
+// 创建时间：2022-5-25
+
 package models
 
 import (
@@ -23,6 +27,7 @@ type CommentActionResponse struct {
 	Comment Comment `json:"comment"` // 评论信息
 }
 
+// CommentActionRequest 评论操作的请求参数
 type CommentActionRequest struct {
 	UserID      int64  `form:"user_id" binding:"required"`     // 用户id
 	Token       string `form:"token" binding:"required"`       // 用户鉴权 token

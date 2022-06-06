@@ -1,3 +1,7 @@
+// relation 包，该包包含了关注的相关模型定义
+// 创建人：龚江炜
+// 创建时间：2022-5-25
+
 package models
 
 import "time"

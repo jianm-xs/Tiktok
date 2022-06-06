@@ -1,3 +1,7 @@
+// feed 包，该包包含了视频流相关的数据库操作
+// 创建人：龚江炜
+// 创建时间：2022-5-15
+
 package dao
 
 import (
@@ -5,12 +9,6 @@ import (
 	"gorm.io/gorm"
 	"time"
 )
-
-// follow 结构体，用于查询关注列表
-type follow struct {
-	userId int64 `gorm:"user_id"`
-	follow bool  `gorm:"is_follow"`
-}
 
 // GetVideos : 执行数据库查询，查找时间小于 lastTime 的前 30 个视频
 // 参数 :

@@ -11,107 +11,107 @@ import (
 	"time"
 )
 
-type SnowflakeIdWorker struct {
+type SnowflakeIDWorker struct {
 	mutex         sync.Mutex // 互斥锁
 	lastTimestamp int64      // 上次生成ID的时间戳
-	workerId      int64      // 工作节点ID（0~31）
-	dataCenterId  int64      // 数据中心机房ID（0~31）
+	workerID      int64      // 工作节点ID（0~31）
+	dataCenterID  int64      // 数据中心机房ID（0~31）
 	sequence      int64      // 序列号（0~4095）
 }
 
 const (
 	epoch              int64 = 1640966400000                                  // 设置起始时间(时间戳/毫秒)：2022-01-01 00:00:00，有效期69年
-	workerIdBits       int64 = 5                                              // 机器id所占的位数
-	dataCenterIdBits   int64 = 5                                              // 数据标识id所占的位数
+	workerIDBits       int64 = 5                                              // 机器ID所占的位数
+	dataCenterIDBits   int64 = 5                                              // 数据标识ID所占的位数
 	timestampBits      int64 = 41                                             // 时间戳所占的位数
-	maxWorkerId        int64 = -1 ^ (-1 << workerIdBits)                      // 支持的最大机器id，结果是31
-	maxDataCenterId    int64 = -1 ^ (-1 << dataCenterIdBits)                  // 支持的最大数据标识id，结果是31
+	maxWorkerID        int64 = -1 ^ (-1 << workerIDBits)                      // 支持的最大机器ID，结果是31
+	maxDataCenterID    int64 = -1 ^ (-1 << dataCenterIDBits)                  // 支持的最大数据标识ID，结果是31
 	maxTimestamp       int64 = -1 ^ (-1 << timestampBits)                     // 支持的最大时间戳
-	sequenceBits       int64 = 12                                             // 序列在id中占的位数
-	workerIdShift      int64 = sequenceBits                                   // 机器ID向左移12位
-	datacenterIdShift  int64 = sequenceBits + workerIdBits                    // 数据标识id向左移17位(12+5)
-	timestampLeftShift int64 = sequenceBits + workerIdBits + dataCenterIdBits // 时间截向左移22位(5+5+12)
+	sequenceBits       int64 = 12                                             // 序列在ID中占的位数
+	workerIDShift      int64 = sequenceBits                                   // 机器ID向左移12位
+	datacenterIDShift  int64 = sequenceBits + workerIDBits                    // 数据标识ID向左移17位(12+5)
+	timestampLeftShift int64 = sequenceBits + workerIDBits + dataCenterIDBits // 时间截向左移22位(5+5+12)
 	sequenceMask       int64 = -1 ^ (-1 << sequenceBits)                      // 生成序列的掩码，这里为4095(0b111111111111)
 )
 
 // 注册 ID 生成器
 
-var RegisterIdWorker *SnowflakeIdWorker
+var RegisterIDWorker *SnowflakeIDWorker
 
 // 视频 ID 生成器
 
-var VideoIdWorker *SnowflakeIdWorker
+var VideoIDWorker *SnowflakeIDWorker
 
 // 评论 ID 生成器
 
-var CommentIdWorker *SnowflakeIdWorker
+var CommentIDWorker *SnowflakeIDWorker
 
 // 粉丝 ID 生成器
 
-var FollowIdWorker *SnowflakeIdWorker
+var FollowIDWorker *SnowflakeIDWorker
 
 // 点赞 ID 生成器
 
-var FavoriteIdWorker *SnowflakeIdWorker
+var FavoriteIDWorker *SnowflakeIDWorker
 
-// 根据 workerId ， dataCenterId ,创建 ID 生成器
-func createWorker(wId int64, dId int64) (*SnowflakeIdWorker, error) {
-	if wId < 0 || wId > maxWorkerId {
+// 根据 workerID ， dataCenterID ,创建 ID 生成器
+func createWorker(wID int64, dID int64) (*SnowflakeIDWorker, error) {
+	if wID < 0 || wID > maxWorkerID {
 		return nil, errors.New("worker ID excess of quantity")
 	}
-	if dId < 0 || dId > maxDataCenterId {
+	if dID < 0 || dID > maxDataCenterID {
 		return nil, errors.New("datacenter ID excess of quantity")
 	}
 	// 生成一个新节点
-	return &SnowflakeIdWorker{
+	return &SnowflakeIDWorker{
 		lastTimestamp: 0,
-		workerId:      wId,
-		dataCenterId:  dId,
+		workerID:      wID,
+		dataCenterID:  dID,
 		sequence:      0,
 	}, nil
 }
 
 // 初始化所有 ID 生成器
 
-func InitIdWorker() error {
+func InitIDWorker() error {
 	//	创建 注册 ID 生成器
-	registerIdWorker, err := createWorker(config.SnowFlakeCfg.WorkerId, config.SnowFlakeCfg.DateCenterId)
-	RegisterIdWorker = registerIdWorker
+	registerIDWorker, err := createWorker(config.SnowFlakeCfg.WorkerID, config.SnowFlakeCfg.DateCenterID)
+	RegisterIDWorker = registerIDWorker
 	if err != nil { // 创建失败
 		return err
 	}
 
 	//	创建 视频 ID 生成器
-	videoIdWorker, err := createWorker(config.SnowFlakeCfg.WorkerId, config.SnowFlakeCfg.DateCenterId)
-	VideoIdWorker = videoIdWorker
+	videoIDWorker, err := createWorker(config.SnowFlakeCfg.WorkerID, config.SnowFlakeCfg.DateCenterID)
+	VideoIDWorker = videoIDWorker
 	if err != nil { // 创建失败
 		return err
 	}
 
 	//	创建 评论 ID 生成器
-	commentIdWorker, err := createWorker(config.SnowFlakeCfg.WorkerId, config.SnowFlakeCfg.DateCenterId)
-	CommentIdWorker = commentIdWorker
+	commentIDWorker, err := createWorker(config.SnowFlakeCfg.WorkerID, config.SnowFlakeCfg.DateCenterID)
+	CommentIDWorker = commentIDWorker
 	if err != nil {
 		return err
 	}
 
 	//	创建 粉丝 ID 生成器
-	followIdWorker, err := createWorker(config.SnowFlakeCfg.WorkerId, config.SnowFlakeCfg.DateCenterId)
-	FollowIdWorker = followIdWorker
+	followIDWorker, err := createWorker(config.SnowFlakeCfg.WorkerID, config.SnowFlakeCfg.DateCenterID)
+	FollowIDWorker = followIDWorker
 	if err != nil {
 		return err
 	}
 
 	//	创建 点赞 ID 生成器
-	favoriteIdWorker, err := createWorker(config.SnowFlakeCfg.WorkerId, config.SnowFlakeCfg.DateCenterId)
-	FavoriteIdWorker = favoriteIdWorker
+	favoriteIDWorker, err := createWorker(config.SnowFlakeCfg.WorkerID, config.SnowFlakeCfg.DateCenterID)
+	FavoriteIDWorker = favoriteIDWorker
 
 	return err
 }
 
 // 获取 ID ，ID 生成异常，返回-1与错误信息
 
-func (w *SnowflakeIdWorker) NextId() (int64, error) {
+func (w *SnowflakeIDWorker) NextID() (int64, error) {
 	// 保障线程安全 加锁
 	w.mutex.Lock()
 	// 生成完成后 解锁
@@ -139,6 +139,6 @@ func (w *SnowflakeIdWorker) NextId() (int64, error) {
 	}
 	// 将机器上一次生成ID的时间更新为当前时间
 	w.lastTimestamp = now
-	ID := int64((now-epoch)<<timestampLeftShift | w.dataCenterId<<datacenterIdShift | (w.workerId << workerIdShift) | w.sequence)
+	ID := int64((now-epoch)<<timestampLeftShift | w.dataCenterID<<datacenterIDShift | (w.workerID << workerIDShift) | w.sequence)
 	return ID, nil
 }

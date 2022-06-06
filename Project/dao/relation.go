@@ -1,3 +1,7 @@
+// relation 包，该包包含了关注的数据库操作
+// 创建人：龚江炜
+// 创建时间：2022-5-25
+
 package dao
 
 import (
@@ -85,9 +89,9 @@ func GetFollowList(queryId, userId int64) ([]models.User, error) {
 	var users []models.User // 结果
 	// 查找当前用户关注的所有用户
 	queryUserFollow := DB.Raw("(?) UNION ALL (?)",
-		DB.Raw("SELECT ? as user_id, 1 as is_follow", userId),                                        // 自己不能关注自己
+		DB.Raw("SELECT ? as user_id, 1 as is_follow", userId), // 自己不能关注自己
 		DB.Select("follow.user_id, 1 as is_follow").
-		Where("follower_id = ?", userId).Table("follow"), // 查找当前用户关注的所有用户
+			Where("follower_id = ?", userId).Table("follow"), // 查找当前用户关注的所有用户
 	)
 	// 查找 queryID 关注的用户
 	queryQueryFollow := DB.Debug().Table("follow").
@@ -115,10 +119,10 @@ func GetFollowerUserList(userId int64, queryId int64) []models.User {
 
 	// 查找当前用户关注的所有用户
 	queryUserFollow := DB.Raw("(?) UNION ALL (?)",
-		DB.Raw("SELECT ? as user_id, 1 as is_follow", userId),                                        // 自己不能关注自己
+		DB.Raw("SELECT ? as user_id, 1 as is_follow", userId), // 自己不能关注自己
 		DB.Select("follow.user_id, 1 as is_follow").
-		Where("follower_id = ?", userId).
-		Table("follow"), // 查找当前用户关注的所有用户
+			Where("follower_id = ?", userId).
+			Table("follow"), // 查找当前用户关注的所有用户
 	)
 	// 查找 queryID 的粉丝
 	queryQueryFollow := DB.Debug().Table("follow").

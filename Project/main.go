@@ -1,3 +1,7 @@
+// main 包，该包内定义了项目的初始化和程序入口
+// 创建人：龚江炜
+// 创建时间：2022-5-14
+
 package main
 
 import (
@@ -13,7 +17,7 @@ func init() {
 		panic(err)
 	}
 	// 初始化所有 ID 生成器
-	err = utils.InitIdWorker()
+	err = utils.InitIDWorker()
 	if err != nil {
 		panic(err)
 	}

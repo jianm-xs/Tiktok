@@ -23,15 +23,15 @@ var MysqlCfg = mysqlConfig{
 }
 
 type snowflakeConfig struct {
-	WorkerId     int64 //工作机器ID
-	DateCenterId int64 //数据中心ID
+	WorkerID     int64 //工作机器ID
+	DateCenterID int64 //数据中心ID
 }
 
 // 本机器的雪花 ID 配置
 
 var SnowFlakeCfg = snowflakeConfig{
-	WorkerId:     0,
-	DateCenterId: 0,
+	WorkerID:     0,
+	DateCenterID: 0,
 }
 
 // ServerHost 服务器地址

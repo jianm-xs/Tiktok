@@ -1,3 +1,7 @@
+// comment 包，该包封装了评论的接口
+// 创建人：龚江炜
+// 创建时间：2022-5-25
+
 package controller
 
 import (

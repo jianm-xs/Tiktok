@@ -1,3 +1,7 @@
+// user 包，该包包含了用户相关的数据库操作
+// 创建人：龚江炜
+// 创建时间：2022-5-15
+
 package dao
 
 import (
@@ -67,7 +71,7 @@ func UserRegister(username string, password string) int64 {
 			CreateTime:    time.Now(),
 			UpdateTime:    time.Now(),
 		}
-		if newUser.ID, err = utils.RegisterIdWorker.NextId(); err != nil {
+		if newUser.ID, err = utils.RegisterIDWorker.NextID(); err != nil {
 			log.Println(err)
 			return -1 //	ID 生成失败返回-1
 		}
