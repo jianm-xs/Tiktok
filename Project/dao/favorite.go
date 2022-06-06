@@ -64,7 +64,7 @@ func FavoriteAction(userId, videoId, actionType int64) error {
 //		[]models.Video 成功返回点赞列表，失败返回nil
 //		error 成功，返回 nil， 否则返回错误信息
 
-func GetFavoriteList(userId int64) []models.Video {
+func GetFavoriteList(authorId, userId int64) []models.Video {
 	var videos []models.Video
 
 	// 查询 follow
@@ -75,7 +75,7 @@ func GetFavoriteList(userId int64) []models.Video {
 
 	// 查询点赞
 	queryFavorite := DB.Select("video_id,create_time,1 as is_favorite").
-		Where("favorite_id = ?", userId).
+		Where("favorite_id = ?", authorId).
 		Table("favorite")
 
 	DB.Table("video").

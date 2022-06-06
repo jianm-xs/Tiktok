@@ -9,7 +9,6 @@ import (
 	"Project/models"
 	"Project/utils"
 	"github.com/gin-gonic/gin"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -71,23 +70,20 @@ func FavoriteList(c *gin.Context) {
 		})
 		return
 	}
-
-	// 校验 token
-	// token 无效
-	if ok, err := utils.CheckToken(token, strconv.FormatInt(uid, 10)); !ok {
-		// 记录校验失败 err
-		log.Println(err)
-		c.JSON(http.StatusOK, models.VideoListResponse{
-			Response: models.Response{
-				StatusCode: -2,
-				StatusMsg:  "token error!"},
-			VideoList: nil,
+	var userId int64
+	myClaims, err := utils.ParseToken(token)
+	if err != nil { // token 解析失败
+		c.JSON(http.StatusOK, models.Response{
+			StatusCode: -2,
+			StatusMsg:  "token error!",
 		})
 		return
+	} else { // 如果 token 解析成功，获取 userId
+		userId, _ = strconv.ParseInt(myClaims.Uid, 10, 64)
 	}
 
 	// 获取视频点赞列表
-	videos := dao.GetFavoriteList(uid)
+	videos := dao.GetFavoriteList(uid, userId)
 
 	c.JSON(http.StatusOK, models.VideoListResponse{
 		Response: models.Response{

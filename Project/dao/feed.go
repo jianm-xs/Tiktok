@@ -10,12 +10,6 @@ import (
 	"time"
 )
 
-// follow 结构体，用于查询关注列表
-type follow struct {
-	userId int64 `gorm:"user_id"`
-	follow bool  `gorm:"is_follow"`
-}
-
 // GetVideos : 执行数据库查询，查找时间小于 lastTime 的前 30 个视频
 // 参数 :
 //      lastTime : 视频最晚时间，可以为空
