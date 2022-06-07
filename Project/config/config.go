@@ -13,6 +13,12 @@ type mysqlConfig struct {
 	CharSet  string `yaml:"charset"`
 }
 
+type RedisConfig struct {
+	Addr     string `yaml:"Addr"`
+	Password string `yaml:"password"`
+	DB       int    `yaml:"DB"`
+}
+
 var MysqlCfg = mysqlConfig{
 	Url:      "127.0.0.1",
 	UserName: "root",
@@ -20,6 +26,12 @@ var MysqlCfg = mysqlConfig{
 	DBName:   "Tiktok",
 	Port:     "3306",
 	CharSet:  "utf8mb4",
+}
+
+var RedisCfg = RedisConfig{
+	Addr:     "localhost:6379",
+	Password: "",
+	DB:       0,
 }
 
 type snowflakeConfig struct {
@@ -35,7 +47,7 @@ var SnowFlakeCfg = snowflakeConfig{
 }
 
 // ServerHost 服务器地址
-var ServerHost = "81.70.17.190"
+var ServerHost = "192.168.31.213"
 
 // ServerPort 服务端口
 var ServerPort = ":1080"

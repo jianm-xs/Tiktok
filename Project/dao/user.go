@@ -91,9 +91,9 @@ func UserRegister(username string, password string) int64 {
 //      queryId : 被查询者的 id
 //		userId : 用户的 id
 // 返回值：
-//		查询出来用户，如果查询出错或无该用户，返回 nil
+//		用户信息和错误信息
 
-func GetUserInfo(queryId int64, userId int64) models.User {
+func GetUserInfo(queryId int64, userId int64) (models.User, error) {
 	var user models.User // 结果
 	// 查看是否关注该用户
 	queryFollow := DB.Raw("? UNION ALL ?",
@@ -107,5 +107,7 @@ func GetUserInfo(queryId int64, userId int64) models.User {
 		// 联结是否关注
 		Joins("LEFT JOIN (?) AS fo ON fo.user_id = user.user_id", queryFollow).
 		First(&user)
-	return user
+	// 更新用户信息
+	err := UpdateUser(&user)
+	return user, err
 }

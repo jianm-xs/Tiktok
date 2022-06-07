@@ -107,9 +107,13 @@ func FollowerList(c *gin.Context) {
 	}
 
 	// 获取粉丝列表
-	result.UserList = dao.GetFollowerUserList(userId, queryId)
-
-	result.StatusCode = 0
-	result.StatusMsg = "success!"
+	result.UserList, err = dao.GetFollowerUserList(userId, queryId)
+	if err != nil {
+		result.StatusCode = -2
+		result.StatusMsg = "search databases error!"
+	} else {
+		result.StatusCode = 0
+		result.StatusMsg = "success!"
+	}
 	c.JSON(http.StatusOK, result)
 }

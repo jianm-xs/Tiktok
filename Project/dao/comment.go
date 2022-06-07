@@ -9,12 +9,14 @@ import (
 	"Project/utils"
 	"errors"
 	"gorm.io/gorm"
+	"strconv"
 	"time"
 )
 
 const (
-	PUBLISH = 1
-	DELETE  = 2
+	PUBLISH     = 1
+	DELETE      = 2
+	ActionError = 2
 )
 
 // PerformCommentAction 登录用户对视频评论进行操作
@@ -33,11 +35,27 @@ func PerformCommentAction(userID int64, videoID int64, actionType int,
 	if err := DB.Debug().Where("video_id = ?", videoID).Error; err != nil {
 		return nil, errors.New("video does not exist")
 	}
+	key := "video_commentCount_" + strconv.FormatInt(videoID, 10)
 	switch actionType {
 	case PUBLISH:
-		return CreateComment(userID, videoID, commentText)
+		comment, err := CreateComment(userID, videoID, commentText)
+		if err != nil {
+			// 如果评论失败，返回错误
+			return nil, err
+		}
+		// 该视频的评论数 + 1
+		err = IncreaseValue(key, models.Video{ID: videoID}, "comment_count", "video")
+		return comment, err
 	case DELETE:
-		return DeleteComment(userID, commentID)
+		// 删除评论
+		comment, err := DeleteComment(userID, commentID)
+		if err != nil {
+			// 如果删除失败，返回错误
+			return nil, err
+		}
+		// 该视频的评论数 - 1
+		err = DecreaseValue(key, models.Video{ID: videoID}, "comment_count", "video")
+		return comment, err
 	default:
 		// 防御性
 		return nil, errors.New("invalid operation")
@@ -121,7 +139,9 @@ func CreateComment(userID int64, videoID int64,
 		// 插入异常
 		return nil, result.Error
 	}
-	return &comment, nil
+	// 更新作者信息
+	err = UpdateUser(&comment.Author)
+	return &comment, err
 }
 
 // GetCommentList 返回评论列表
@@ -154,6 +174,13 @@ func GetCommentList(userId, videoId int64) ([]models.Comment, error) {
 		Find(&comments).Error
 	if err != nil { // 查询出错
 		return nil, err
+	}
+	for i, _ := range comments {
+		// 更新作者信息
+		err = UpdateUser(&comments[i].Author)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return comments, nil // 查询成功
 }

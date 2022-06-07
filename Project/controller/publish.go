@@ -161,13 +161,24 @@ func PublishList(c *gin.Context) {
 	}
 
 	//获取 author 发布视频信息，userId 用于判断是否关注了
-	videos := dao.GetVideoList(authorId, userId)
+	videos, err := dao.GetVideoList(authorId, userId)
+	if err != nil {
+		c.JSON(http.StatusOK, models.VideoListResponse{
+			Response: models.Response{
+				StatusCode: 0,
+				StatusMsg:  "search databases error",
+			},
+			VideoList: videos,
+		})
+	} else {
+		//接口返回
+		c.JSON(http.StatusOK, models.VideoListResponse{
+			Response: models.Response{
+				StatusCode: 0,
+				StatusMsg:  "success!",
+			},
+			VideoList: videos,
+		})
+	}
 
-	//接口返回
-	c.JSON(http.StatusOK, models.VideoListResponse{
-		Response: models.Response{
-			StatusCode: 0,
-		},
-		VideoList: videos,
-	})
 }

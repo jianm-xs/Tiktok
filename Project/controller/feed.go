@@ -38,12 +38,21 @@ func Feed(c *gin.Context) {
 	} else { // 如果 token 解析成功，获取 userId
 		userId, _ = strconv.ParseInt(myClaims.Uid, 10, 64)
 	}
-	result.VideoList = dao.GetVideos(lastTime, userId) // 执行数据库查询，获取结果
-	result.Response.StatusCode = 0                     // 成功，设置状态码和描述
-	result.Response.StatusMsg = "success"
-	if len(result.VideoList) > 0 { // 如果有返回视频，更新 nextTime。方便下次获取视频列表时使用
-		length := len(result.VideoList)                                // 获取视频数
-		result.NextTime = result.VideoList[length-1].CreateTime.Unix() // 获取最后一个视频的时间，转为 int
+	result.VideoList, err = dao.GetVideos(lastTime, userId) // 执行数据库查询，获取结果
+	if err != nil {
+		result.Response.StatusCode = -1 // 成功，设置状态码和描述
+		result.Response.StatusMsg = "search databases error"
+		if len(result.VideoList) > 0 { // 如果有返回视频，更新 nextTime。方便下次获取视频列表时使用
+			length := len(result.VideoList)                                // 获取视频数
+			result.NextTime = result.VideoList[length-1].CreateTime.Unix() // 获取最后一个视频的时间，转为 int
+		}
+	} else {
+		result.Response.StatusCode = 0 // 成功，设置状态码和描述
+		result.Response.StatusMsg = "success"
+		if len(result.VideoList) > 0 { // 如果有返回视频，更新 nextTime。方便下次获取视频列表时使用
+			length := len(result.VideoList)                                // 获取视频数
+			result.NextTime = result.VideoList[length-1].CreateTime.Unix() // 获取最后一个视频的时间，转为 int
+		}
 	}
 	c.JSON(http.StatusOK, result) // 设置返回的信息
 }

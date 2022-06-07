@@ -8,6 +8,7 @@ import (
 	"Project/models"
 	"errors"
 	"gorm.io/gorm"
+	"strconv"
 	"time"
 )
 
@@ -21,35 +22,38 @@ import (
 func FavoriteAction(userId, videoId, actionType int64) error {
 	var count int64 // 查看有没有对应的 video-user 对
 	DB.Table("favorite").Where("favorite_id = ? AND video_id = ?", userId, videoId).Count(&count)
-	if count+actionType == 2 {
+	if count+actionType == ActionError {
 		// count 只有 1 和 0
 		// 如果 count = 0,那么不能删除(actionType != 2)
 		// 如果 count = 1，那么不可以继续插入(actionType != 1)
 		return errors.New("action error")
 	}
+	// 通过 VideoId 获取对应的 Key 值，方便 Redis 操作
+	key := "video_favoriteCount_" + strconv.FormatInt(videoId, 10)
 	switch actionType {
 	case PUBLISH:
-		// 如果是点赞操作，插入即可
+		// 点赞操作，插入这条记录
 		favorite := models.Favorite{
 			UserID:     userId,
 			VideoID:    videoId,
 			CreateTime: time.Now(),
 		}
-		// 插入操作
-		// 点赞数 + 1
-		err := DB.Debug().Model(&models.Video{ID: videoId}).UpdateColumn("favorite_count", gorm.Expr("favorite_count + 1")).Error
-		if err != nil {
-			return err // 视频的点赞数加一
+		// 插入这条点赞记录到数据库中
+		err := DB.Debug().Create(&favorite).Error
+		if err != nil { // 数据写入失败
+			return err
 		}
-		err = DB.Debug().Create(&favorite).Error // 插入这条点赞记录
+		// 该视频的点赞数 + 1
+		err = IncreaseValue(key, models.Video{ID: videoId}, "favorite_count", "video")
 		return err
 	case DELETE:
-		// 视频点赞数 - 1
-		err := DB.Debug().Model(&models.Video{ID: videoId}).UpdateColumn("favorite_count", gorm.Expr("favorite_count - 1")).Error
-		if err != nil {
-			return err // 视频点赞 -1 失败
+		// 删除操作，删除这条记录
+		err := DB.Debug().Delete(models.Favorite{}, "favorite_id = ? and video_id = ?", userId, videoId).Error // 删除这条点赞记录
+		if err != nil {                                                                                        // 删除点赞记录失败
+			return err
 		}
-		err = DB.Debug().Delete(models.Favorite{}, "favorite_id = ? and video_id = ?", userId, videoId).Error // 删除这条点赞记录
+		// 该视频的点赞数 - 1
+		err = DecreaseValue(key, models.Video{ID: videoId}, "favorite_count", "video")
 		return err
 	default:
 		// 防御性
@@ -63,8 +67,7 @@ func FavoriteAction(userId, videoId, actionType int64) error {
 // 返回值：
 //		[]models.Video 成功返回点赞列表，失败返回nil
 //		error 成功，返回 nil， 否则返回错误信息
-
-func GetFavoriteList(authorId, userId int64) []models.Video {
+func GetFavoriteList(authorId, userId int64) ([]models.Video, error) {
 	var videos []models.Video
 
 	// 查询 follow
@@ -78,7 +81,7 @@ func GetFavoriteList(authorId, userId int64) []models.Video {
 		Where("favorite_id = ?", authorId).
 		Table("favorite")
 
-	DB.Table("video").
+	err := DB.Debug().Table("video").
 		// 预加载 User，给 user 表加上 is_follow 字段再查找
 		Preload("Author", func(db *gorm.DB) *gorm.DB {
 			return db.Select("user.*, is_follow").
@@ -91,7 +94,16 @@ func GetFavoriteList(authorId, userId int64) []models.Video {
 		Order("fa.create_time DESC").
 		// 选择返回的字段, video 表中缺少 comment_count 属性，暂时用0替代
 		Select("video.*, is_favorite, 0 as comment_count").
-		Find(&videos)
+		Find(&videos).Error
+	if err != nil {
+		// 如果查询失败，返回错误信息
+		return nil, err
+	}
+	err = UpdateVideos(videos[:])
+	if err != nil {
+		// 如果更新出现问题，返回错误
+		return nil, err
+	}
 
-	return videos
+	return videos, nil
 }

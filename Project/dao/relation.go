@@ -8,7 +8,7 @@ import (
 	"Project/models"
 	"errors"
 	"fmt"
-	"gorm.io/gorm"
+	"strconv"
 	"time"
 )
 
@@ -32,6 +32,8 @@ func RelationAction(userId, toUserId, actionType int64) error {
 		// 如果 count = 1，那么不可以继续插入(actionType != 1)
 		return errors.New("action error")
 	}
+	userKey := "user_followCount_" + strconv.FormatInt(userId, 10)
+	toUesrKey := "user_followerCount_" + strconv.FormatInt(toUserId, 10)
 	switch actionType {
 	case PUBLISH:
 		// 如果是关注操作，插入即可
@@ -40,38 +42,37 @@ func RelationAction(userId, toUserId, actionType int64) error {
 			UserID:     toUserId,
 			CreateTime: time.Now(),
 		}
-		// 插入操作
-		// 被关注用户的被关注数 + 1
-		err := DB.Debug().Model(&models.User{ID: toUserId}).
-			UpdateColumn("follower_count", gorm.Expr("follower_count + 1")).Error
-		if err != nil {
-			return err
-		}
-		// 当前用户的关注数 + 1
-		err = DB.Debug().Model(&models.User{ID: userId}).
-			UpdateColumn("follow_count", gorm.Expr("follow_count + 1")).Error
-		if err != nil {
-			return err
-		}
 		// 插入关注记录
-		err = DB.Debug().Create(&follow).Error
+		err := DB.Debug().Create(&follow).Error
+		if err != nil {
+			// 插入失败，返回错误
+			return err
+		}
+		// 当前用户的关注人数 + 1
+		err = IncreaseValue(userKey, models.User{ID: userId}, "follow_count", "user")
+		if err != nil {
+			// 如果更新数据失败，返回错误
+			return err
+		}
+		// 被关注者的粉丝 + 1
+		err = IncreaseValue(toUesrKey, models.User{ID: toUserId}, "follower_count", "user")
 		return err
 	case DELETE:
-		// 被关注用户的被关注数 - 1
-		err := DB.Debug().Model(&models.User{ID: toUserId}).
-			UpdateColumn("follower_count", gorm.Expr("follower_count - 1")).Error
-		if err != nil {
-			return err
-		}
-		// 当前用户的被关注数 - 1
-		err = DB.Debug().Model(&models.User{ID: userId}).
-			UpdateColumn("follow_count", gorm.Expr("follow_count - 1")).Error
-		if err != nil {
-			return err
-		}
 		// 删除关注记录
-		err = DB.Debug().
+		err := DB.Debug().
 			Delete(models.Follow{}, "user_id = ? and follower_id = ?", toUserId, userId).Error
+		if err != nil {
+			// 插入失败，返回错误
+			return err
+		}
+		// 当前用户的关注人数 - 1
+		err = DecreaseValue(userKey, models.User{ID: userId}, "follow_count", "user")
+		if err != nil {
+			// 如果更新数据失败，返回错误
+			return err
+		}
+		// 被关注者的粉丝 - 1
+		err = DecreaseValue(toUesrKey, models.User{ID: toUserId}, "follower_count", "user")
 		return err
 	default:
 		// 防御性
@@ -105,6 +106,12 @@ func GetFollowList(queryId, userId int64) ([]models.User, error) {
 		// 右联结 queryId 关注的用户
 		Joins("RIGHT JOIN (?) AS query ON user.user_id = query.user_id", queryQueryFollow).
 		Find(&users).Error
+	if err != nil {
+		// 查询失败，返回错误信息
+		return nil, err
+	}
+	// 更新用户信息
+	err = UpdateUsers(users[:])
 	return users, err
 }
 
@@ -114,7 +121,7 @@ func GetFollowList(queryId, userId int64) ([]models.User, error) {
 //		queryId : 要查询用户的 id
 // 返回值：
 //		返回根据 queryId 查询出的粉丝列表
-func GetFollowerUserList(userId int64, queryId int64) []models.User {
+func GetFollowerUserList(userId int64, queryId int64) ([]models.User, error) {
 	var users []models.User // 结果
 
 	// 查找当前用户关注的所有用户
@@ -137,7 +144,10 @@ func GetFollowerUserList(userId int64, queryId int64) []models.User {
 		Joins("RIGHT JOIN (?) AS query ON user.user_id = query.user_id", queryQueryFollow).
 		Find(&users).Error
 	if err != nil {
-		return nil
+		// 查询失败
+		return nil, err
 	}
-	return users
+	// 更新用户信息
+	err = UpdateUsers(users[:])
+	return users, err
 }

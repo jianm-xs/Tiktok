@@ -57,6 +57,7 @@ func FavoriteAction(c *gin.Context) {
 
 // FavoriteList 点赞列表接口
 func FavoriteList(c *gin.Context) {
+	var videos []models.Video
 	// 获取请求参数
 	uid, _ := strconv.ParseInt(c.DefaultQuery("user_id", "-1"), 10, 64)
 	token := c.DefaultQuery("token", "")
@@ -83,13 +84,21 @@ func FavoriteList(c *gin.Context) {
 	}
 
 	// 获取视频点赞列表
-	videos := dao.GetFavoriteList(uid, userId)
-
-	c.JSON(http.StatusOK, models.VideoListResponse{
-		Response: models.Response{
-			StatusCode: 0,
-			StatusMsg:  "success!"},
-		VideoList: videos,
-	})
+	videos, err = dao.GetFavoriteList(uid, userId)
+	if err != nil {
+		c.JSON(http.StatusOK, models.VideoListResponse{
+			Response: models.Response{
+				StatusCode: -2,
+				StatusMsg:  "select databases error"},
+			VideoList: videos,
+		})
+	} else {
+		c.JSON(http.StatusOK, models.VideoListResponse{
+			Response: models.Response{
+				StatusCode: 0,
+				StatusMsg:  "success!"},
+			VideoList: videos,
+		})
+	}
 	return
 }

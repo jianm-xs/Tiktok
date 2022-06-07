@@ -12,7 +12,13 @@ import (
 )
 
 func init() {
+	// 连接数据库
 	err := dao.InitMysql()
+	if err != nil {
+		panic(err)
+	}
+	// 连接 Redis 服务器
+	err = dao.InitRedis()
 	if err != nil {
 		panic(err)
 	}
