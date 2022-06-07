@@ -87,8 +87,13 @@ func UserInfo(c *gin.Context) {
 		userId, _ = strconv.ParseInt(myClaims.Uid, 10, 64)
 	}
 	// 数据库查询结果，获取用户信息
-	result.User = dao.GetUserInfo(queryId, userId)
-	result.Response.StatusCode = 0 // 成功，设置状态码和描述
-	result.Response.StatusMsg = "success"
+	result.User, err = dao.GetUserInfo(queryId, userId)
+	if err != nil {
+		result.StatusCode = -2
+		result.StatusMsg = "search databases error!"
+	} else {
+		result.StatusCode = 0
+		result.StatusMsg = "success!"
+	}
 	c.JSON(http.StatusOK, result) // 设置返回的信息
 }

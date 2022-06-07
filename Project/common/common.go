@@ -4,6 +4,15 @@
 
 package common
 
+// 状态相关常量定义
+
 const (
 	StatusOK = 0
+)
+
+// Redis 相关常量定义
+
+const (
+	HAS_KEY     = 1
+	HAS_NOT_KEY = 0
 )
