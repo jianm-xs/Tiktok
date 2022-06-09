@@ -11,6 +11,7 @@ import (
 	"errors"
 	"github.com/go-redis/redis"
 	"strconv"
+	"strings"
 )
 
 var RedisDB *redis.Client
@@ -48,6 +49,7 @@ func InitRedis() (err error) {
 //	key: 键
 //  val: 值，传指针，若 Redis 中有数据，则写入 val 中，否则将 val 写入 Redis 中
 // 	id : Hash 中的键值
+//  column: 数据库中对应的字段名
 // 返回值：
 //		错误信息
 func FindRedis(key string, val *int64, id string) error {
@@ -272,19 +274,97 @@ func DecreaseValue[T models.User | models.Video](key string, data T, column stri
 // 参数 :
 //	key: 键
 //  data: 数据结构体
-//  id: ID 值
+//  id: 操作者 ID 和被操作者 ID 组成的值，作为 Hash 中的键
 // 返回值：
 //		错误信息
 func CreateData[T models.Favorite | models.Follow](key string, data T, id string) error {
-	// 数据解析为字符串
-	val, err := json.Marshal(data)
-	if err != nil {
+	// 查看 Redis 中是否存在该键值
+	hasKey, err := RedisDB.HExists(key, id).Result()
+	if err != nil { // 查询出错
 		return err
 	}
-	// 读取 Redis 中是否有该数据，如果有，可以获取值，如果没有，只能获取 nil
+	// 获取操作者 ID 和被操作者 ID
+	ids := strings.Split(id, ":")
+	if hasKey == HasNotKey {
+		// 如果不存在该值，需要从数据库中获取数据进行 Redis 更新操作
+		// 获取表名， 对 key 进行分割， : 之前是表名
+		if key == "favorite" {
+			// 说明是一个点赞数据
+			// 如果没有该数据，查询数据库进行更新
+			var favorite models.Favorite
+			var count int64 // 查看有没有对应的 video-user 对
+			err = DB.Table(key).
+				Where("favorite_id = ? AND video_id = ?", ids[0], ids[1]).
+				Find(&favorite).
+				Count(&count).
+				Error
+			if err != nil {
+				// 查询失败
+				return err
+			}
+			if count == HasData {
+				// 如果有数据，写入 Redis 中
+				// 数据解析为字符串
+				favoriteVal, err := json.Marshal(favorite)
+				if err != nil {
+					return err
+				}
+				// 更新到 Redis
+				err = RedisDB.HSet(key, id, string(favoriteVal)).Err()
+				if err != nil {
+					return err
+				}
+			} else {
+				// 如果不存在，该值设置为 nil
+				err = RedisDB.HSet(key, id, "nil").Err()
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			// 说明是一个关注数据
+			var follow models.Follow
+			var count int64 // 查看有没有对应的 video-user 对
+			err = DB.Table(key).
+				Where("follower_id = ? AND user_id = ?", ids[0], ids[1]).
+				Find(&follow).
+				Count(&count).
+				Error
+			if err != nil {
+				// 查询失败
+				return err
+			}
+			if count == HasData {
+				// 如果有数据，写入 Redis 中
+				// 数据解析为字符串
+				followVal, err := json.Marshal(follow)
+				if err != nil {
+					return err
+				}
+				// 更新到 Redis
+				err = RedisDB.HSet(key, id, string(followVal)).Err()
+				if err != nil {
+					return err
+				}
+			} else {
+				// 如果不存在，该值设置为 nil
+				err = RedisDB.HSet(key, id, "nil").Err()
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+	// 读取 Redis 中该数据
 	redisData, _ := RedisDB.HGet(key, id).Result()
-	if redisData == "" || redisData == "nil" {
+	if redisData == "nil" {
 		// 说明不存在该数据，创建数据
+		// 数据解析为字符串
+		val, err := json.Marshal(data)
+		if err != nil {
+			return err
+		}
+		// 写入 Redis
 		err = RedisDB.HSet(key, id, val).Err()
 	} else {
 		// 如果有该数据，无法继续创建
@@ -305,19 +385,84 @@ func DeleteData(key string, id string) error {
 	if err != nil { // 查询出错
 		return err
 	}
-	switch hasKey {
-	case HasKey:
-		// 如果 Redis 中有该数据，获取值
-		data, _ := RedisDB.HGet(key, id).Result()
-		// 如果值为 nil， 说明不存在该值
-		if data == "nil" {
-			err = errors.New("no such data")
+	// 获取操作者 ID 和被操作者 ID
+	ids := strings.Split(id, ":")
+	if hasKey == HasNotKey {
+		// 如果不存在该值，需要从数据库中获取数据进行 Redis 更新操作
+		// 获取表名， 对 key 进行分割， : 之前是表名
+		if key == "favorite" {
+			// 说明是一个点赞数据
+			var favorite models.Favorite
+			var count int64 // 查看有没有对应的 video-user 对
+			err = DB.Table(key).
+				Where("favorite_id = ? AND video_id = ?", ids[0], ids[1]).
+				Find(&favorite).
+				Count(&count).
+				Error
+			if err != nil {
+				// 查询失败
+				return err
+			}
+			if count == HasData {
+				// 如果有数据，写入 Redis 中
+				// 数据解析为字符串
+				favoriteVal, err := json.Marshal(favorite)
+				if err != nil {
+					return err
+				}
+				// 更新到 Redis
+				err = RedisDB.HSet(key, id, string(favoriteVal)).Err()
+				if err != nil {
+					return err
+				}
+			} else {
+				// 如果不存在，该值设置为 nil
+				err = RedisDB.HSet(key, id, "nil").Err()
+				if err != nil {
+					return err
+				}
+			}
 		} else {
-			// 如果有该数据，删除：值改为 nil
-			err = RedisDB.HSet(key, id, "nil").Err()
+			// 说明是一个关注数据
+			var follow models.Follow
+			var count int64 // 查看有没有对应的 video-user 对
+			err = DB.Table(key).
+				Where("follower_id = ? AND user_id = ?", ids[0], ids[1]).
+				Find(&follow).
+				Count(&count).
+				Error
+			if err != nil {
+				// 查询失败
+				return err
+			}
+			if count == HasData {
+				// 如果有数据，写入 Redis 中
+				// 数据解析为字符串
+				followVal, err := json.Marshal(follow)
+				if err != nil {
+					return err
+				}
+				// 更新到 Redis
+				err = RedisDB.HSet(key, id, string(followVal)).Err()
+				if err != nil {
+					return err
+				}
+			} else {
+				// 如果不存在，该值设置为 nil
+				err = RedisDB.HSet(key, id, "nil").Err()
+				if err != nil {
+					return err
+				}
+			}
 		}
-	case HasNotKey:
-		// 如果没有该数据，为了防止缓存击穿，增加该键值到 Redis
+	}
+	// 读取 Redis 中该数据
+	redisData, _ := RedisDB.HGet(key, id).Result()
+	if redisData == "nil" {
+		// 说明不存在该数据，不要胡乱操作
+		err = errors.New("don't repeat the operation")
+	} else {
+		// 如果有数据，改为 nil ，表示没有该数据了
 		err = RedisDB.HSet(key, id, "nil").Err()
 	}
 	return err

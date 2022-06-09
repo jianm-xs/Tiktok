@@ -49,7 +49,7 @@ func FavoriteAction(userId, videoId, actionType int64) error {
 		return err
 	case DELETE:
 		// 把这条数据从 Redis 中删除
-		err = DeleteData(key, favoriteID)
+		err = DeleteData("favorite", favoriteID)
 		if err != nil { // 删除点赞记录失败
 			return err
 		}
