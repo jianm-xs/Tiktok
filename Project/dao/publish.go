@@ -76,7 +76,7 @@ func GetVideoList(authorId int64, userId int64) ([]models.Video, error) {
 		return nil, err
 	}
 	// 使用 Redis 中的数据更新视频信息
-	err = UpdateVideos(videos[:])
+	//err = UpdateVideos(videos[:])
 	if err != nil {
 		// 如果更新出现问题，返回错误
 		return nil, err

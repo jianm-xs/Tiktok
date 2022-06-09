@@ -35,7 +35,8 @@ func PerformCommentAction(userID int64, videoID int64, actionType int,
 	if err := DB.Debug().Where("video_id = ?", videoID).Error; err != nil {
 		return nil, errors.New("video does not exist")
 	}
-	key := "video_commentCount_" + strconv.FormatInt(videoID, 10)
+	videoIDStr := strconv.FormatInt(videoID, 10)
+	key := "video:commentCount"
 	switch actionType {
 	case PUBLISH:
 		comment, err := CreateComment(userID, videoID, commentText)
@@ -44,7 +45,7 @@ func PerformCommentAction(userID int64, videoID int64, actionType int,
 			return nil, err
 		}
 		// 该视频的评论数 + 1
-		err = IncreaseValue(key, models.Video{ID: videoID}, "comment_count", "video")
+		err = IncreaseValue(key, models.Video{ID: videoID}, "comment_count", "video", videoIDStr)
 		return comment, err
 	case DELETE:
 		// 删除评论
@@ -54,7 +55,7 @@ func PerformCommentAction(userID int64, videoID int64, actionType int,
 			return nil, err
 		}
 		// 该视频的评论数 - 1
-		err = DecreaseValue(key, models.Video{ID: videoID}, "comment_count", "video")
+		err = DecreaseValue(key, models.Video{ID: videoID}, "comment_count", "video", videoIDStr)
 		return comment, err
 	default:
 		// 防御性
@@ -93,7 +94,7 @@ func DeleteComment(userID int64, commentID int64) (*models.Comment, error) {
 	return &comment, nil
 }
 
-// CreateComment 删除评论
+// CreateComment 创建评论
 // param:
 //		userID: 请求的用户 id
 // 		videoID: 评论所属的视频 id
@@ -140,7 +141,8 @@ func CreateComment(userID int64, videoID int64,
 		return nil, result.Error
 	}
 	// 更新作者信息
-	err = UpdateUser(&comment.Author)
+	userIdStr := strconv.FormatInt(userID, 10)
+	err = UpdateUser(&comment.Author, userIdStr)
 	return &comment, err
 }
 
@@ -177,7 +179,8 @@ func GetCommentList(userId, videoId int64) ([]models.Comment, error) {
 	}
 	for i, _ := range comments {
 		// 更新作者信息
-		err = UpdateUser(&comments[i].Author)
+		userIdStr := strconv.FormatInt(userId, 10)
+		err = UpdateUser(&comments[i].Author, userIdStr)
 		if err != nil {
 			return nil, err
 		}

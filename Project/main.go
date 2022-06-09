@@ -22,6 +22,10 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+	err = dao.InitTimerTask()
+	if err != nil {
+		panic(err)
+	}
 	// 初始化所有 ID 生成器
 	err = utils.InitIDWorker()
 	if err != nil {

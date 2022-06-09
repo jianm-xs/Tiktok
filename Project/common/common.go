@@ -9,10 +9,3 @@ package common
 const (
 	StatusOK = 0
 )
-
-// Redis 相关常量定义
-
-const (
-	HAS_KEY     = 1
-	HAS_NOT_KEY = 0
-)

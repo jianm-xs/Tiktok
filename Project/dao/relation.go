@@ -6,8 +6,8 @@ package dao
 
 import (
 	"Project/models"
+	"Project/utils"
 	"errors"
-	"fmt"
 	"strconv"
 	"time"
 )
@@ -20,20 +20,18 @@ import (
 // 返回值：
 //		如果操作成功，返回 nil， 否则返回错误信息
 func RelationAction(userId, toUserId, actionType int64) error {
+	var err error
 	if userId == toUserId { // 如果是自己对自己操作，不管
 		return errors.New("you cannot operate on yourself")
 	}
 	var count int64 // 查看有没有对应的 user-follower 对
 	_ = DB.Debug().Table("follow").Where("user_id = ? AND follower_id = ?", toUserId, userId).Count(&count).Error
-	fmt.Println("=====>", count, " and userID : ", userId, " and toUserId:", toUserId)
-	if count+actionType == 2 {
-		// count 只有 1 和 0
-		// 如果 count = 0,那么不能删除(actionType != 2)
-		// 如果 count = 1，那么不可以继续插入(actionType != 1)
-		return errors.New("action error")
-	}
-	userKey := "user_followCount_" + strconv.FormatInt(userId, 10)
-	toUesrKey := "user_followerCount_" + strconv.FormatInt(toUserId, 10)
+
+	userIdStr := strconv.FormatInt(userId, 10)
+	toUserIdStr := strconv.FormatInt(toUserId, 10)
+	userKey := "user:followCount"
+	toUserKey := "user:followerCount"
+	RelationKey := userIdStr + ":" + toUserIdStr
 	switch actionType {
 	case PUBLISH:
 		// 如果是关注操作，插入即可
@@ -42,37 +40,40 @@ func RelationAction(userId, toUserId, actionType int64) error {
 			UserID:     toUserId,
 			CreateTime: time.Now(),
 		}
+		// 雪花算法获取 ID
+		if follow.ID, err = utils.FollowIDWorker.NextID(); err != nil {
+			return err
+		}
 		// 插入关注记录
-		err := DB.Debug().Create(&follow).Error
+		err = CreateData("follow", follow, RelationKey)
 		if err != nil {
 			// 插入失败，返回错误
 			return err
 		}
 		// 当前用户的关注人数 + 1
-		err = IncreaseValue(userKey, models.User{ID: userId}, "follow_count", "user")
+		err = IncreaseValue(userKey, models.User{ID: userId}, "follow_count", "user", userIdStr)
 		if err != nil {
 			// 如果更新数据失败，返回错误
 			return err
 		}
 		// 被关注者的粉丝 + 1
-		err = IncreaseValue(toUesrKey, models.User{ID: toUserId}, "follower_count", "user")
+		err = IncreaseValue(toUserKey, models.User{ID: toUserId}, "follower_count", "user", toUserIdStr)
 		return err
 	case DELETE:
 		// 删除关注记录
-		err := DB.Debug().
-			Delete(models.Follow{}, "user_id = ? and follower_id = ?", toUserId, userId).Error
+		err = DeleteData("follow", RelationKey)
 		if err != nil {
 			// 插入失败，返回错误
 			return err
 		}
 		// 当前用户的关注人数 - 1
-		err = DecreaseValue(userKey, models.User{ID: userId}, "follow_count", "user")
+		err = DecreaseValue(userKey, models.User{ID: userId}, "follow_count", "user", userIdStr)
 		if err != nil {
 			// 如果更新数据失败，返回错误
 			return err
 		}
 		// 被关注者的粉丝 - 1
-		err = DecreaseValue(toUesrKey, models.User{ID: toUserId}, "follower_count", "user")
+		err = DecreaseValue(toUserKey, models.User{ID: toUserId}, "follower_count", "user", toUserIdStr)
 		return err
 	default:
 		// 防御性
@@ -87,31 +88,25 @@ func RelationAction(userId, toUserId, actionType int64) error {
 // 返回值：
 //		返回关注者列表和错误信息
 func GetFollowList(queryId, userId int64) ([]models.User, error) {
+	// 更新数据库数据
+	err := updateFollowData()
+	if err != nil {
+		return nil, err
+	}
 	var users []models.User // 结果
-	// 查找当前用户关注的所有用户
-	queryUserFollow := DB.Raw("(?) UNION ALL (?)",
-		DB.Raw("SELECT ? as user_id, 1 as is_follow", userId), // 自己不能关注自己
-		DB.Select("follow.user_id, 1 as is_follow").
-			Where("follower_id = ?", userId).Table("follow"), // 查找当前用户关注的所有用户
-	)
 	// 查找 queryID 关注的用户
-	queryQueryFollow := DB.Debug().Table("follow").
-		Select("follow.user_id, is_follow").
+	err = DB.Debug().Table("follow").
+		Select("user.*").
 		Where("follower_id = ?", queryId).
-		// 联结当前用户关注的人，完成 is_follow 查询
-		Joins("LEFT JOIN (?) AS fo ON fo.user_id = follow.user_id", queryUserFollow)
-	// 查询用户信息
-	err := DB.Debug().Table("user").
-		Select("user.*, is_follow").
-		// 右联结 queryId 关注的用户
-		Joins("RIGHT JOIN (?) AS query ON user.user_id = query.user_id", queryQueryFollow).
+		Joins("LEFT JOIN user ON user.user_id = follow.follow_id").
 		Find(&users).Error
 	if err != nil {
 		// 查询失败，返回错误信息
 		return nil, err
 	}
 	// 更新用户信息
-	err = UpdateUsers(users[:])
+	userIdStr := strconv.FormatInt(userId, 10)
+	err = UpdateUsers(users[:], userIdStr)
 	return users, err
 }
 
@@ -122,32 +117,25 @@ func GetFollowList(queryId, userId int64) ([]models.User, error) {
 // 返回值：
 //		返回根据 queryId 查询出的粉丝列表
 func GetFollowerUserList(userId int64, queryId int64) ([]models.User, error) {
+	// 更新数据库数据
+	err := updateFollowData()
+	if err != nil {
+		return nil, err
+	}
 	var users []models.User // 结果
-
-	// 查找当前用户关注的所有用户
-	queryUserFollow := DB.Raw("(?) UNION ALL (?)",
-		DB.Raw("SELECT ? as user_id, 1 as is_follow", userId), // 自己不能关注自己
-		DB.Select("follow.user_id, 1 as is_follow").
-			Where("follower_id = ?", userId).
-			Table("follow"), // 查找当前用户关注的所有用户
-	)
 	// 查找 queryID 的粉丝
-	queryQueryFollow := DB.Debug().Table("follow").
-		Select("follow.follower_id AS user_id, is_follow").
+	err = DB.Debug().Table("follow").
+		Select("user.*").
 		Where("follow.user_id = ?", queryId).
-		// 联结当前用户关注的人，完成 is_follow 查询
-		Joins("LEFT JOIN (?) AS fo ON fo.user_id = follow.follower_id", queryUserFollow)
-	// 查询用户信息
-	err := DB.Debug().Table("user").
-		Select("user.*, is_follow").
-		// 右联结 queryId 的粉丝
-		Joins("RIGHT JOIN (?) AS query ON user.user_id = query.user_id", queryQueryFollow).
+		Joins("LEFT JOIN user ON user.user_id = follow.follower_id").
 		Find(&users).Error
+	// 联结当前用户关注的人，完成 is_follow 查询
 	if err != nil {
 		// 查询失败
 		return nil, err
 	}
 	// 更新用户信息
-	err = UpdateUsers(users[:])
+	userIdStr := strconv.FormatInt(userId, 10)
+	err = UpdateUsers(users[:], userIdStr)
 	return users, err
 }
