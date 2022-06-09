@@ -20,6 +20,7 @@ var RedisDB *redis.Client
 const (
 	HasKey    = true
 	HasNotKey = false
+	HasData   = 1
 )
 
 // InitRedis 初始化 Redis 客户端
@@ -46,6 +47,7 @@ func InitRedis() (err error) {
 // 参数 :
 //	key: 键
 //  val: 值，传指针，若 Redis 中有数据，则写入 val 中，否则将 val 写入 Redis 中
+// 	id : Hash 中的键值
 // 返回值：
 //		错误信息
 func FindRedis(key string, val *int64, id string) error {
@@ -64,6 +66,124 @@ func FindRedis(key string, val *int64, id string) error {
 		err = RedisDB.HSet(key, id, *val).Err()
 	default:
 		return errors.New("invalid operation")
+	}
+	return err
+}
+
+// FindIsFollowed 在 Redis 中关注数据
+// 参数 :
+//	key: 键
+//  val: 值，传指针，若 Redis 中有数据，则写入 val 中，否则查找数据库将 val 写入 Redis 中
+// 	id : Hash 中的键值
+// 返回值：
+//		错误信息
+func FindIsFollowed(val *bool, userId string, toUserId string) error {
+	id := userId + ":" + toUserId
+	// 查看 Redis 中是否存储了该值
+	hasKey, err := RedisDB.HExists("follow", id).Result()
+	if err != nil {
+		return err
+	}
+	if hasKey == HasNotKey {
+		// 如果没有该数据，查询数据库进行更新
+		var follow models.Follow
+		var count int64 // 查看有没有对应的 video-user 对
+		err = DB.Table("follow").
+			Where("follower_id = ? AND user_id = ?", userId, toUserId).
+			Find(&follow).
+			Count(&count).
+			Error
+		if err != nil {
+			// 查询失败
+			return err
+		}
+		if count == HasData {
+			// 如果有数据，写入 Redis 中
+			// 数据解析为字符串
+			followVal, err := json.Marshal(follow)
+			if err != nil {
+				return err
+			}
+			// 更新到 Redis
+			err = RedisDB.HSet("follow", id, string(followVal)).Err()
+			if err != nil {
+				return err
+			}
+		} else {
+			// 如果不存在，该值设置为 nil
+			err = RedisDB.HSet("follow", id, "nil").Err()
+			if err != nil {
+				return err
+			}
+		}
+	}
+	// 获取值
+	result, _ := RedisDB.HGet("follow", id).Result()
+	if result != "" && result != "nil" {
+		// 如果存在该数据，就是关注了
+		*val = true
+	} else {
+		// 如果没有被关注
+		*val = false
+	}
+	return err
+}
+
+// FindIsFavorite 在 Redis 中点赞数据
+// 参数 :
+//	key: 键
+//  val: 值，传指针，若 Redis 中有数据，则写入 val 中，否则查找数据库将 val 写入 Redis 中
+// 	id : Hash 中的键值
+// 返回值：
+//		错误信息
+func FindIsFavorite(val *bool, userId string, videoId string) error {
+	id := userId + ":" + videoId
+	// 查看 Redis 中是否存储了该值
+	hasKey, err := RedisDB.HExists("favorite", id).Result()
+	if err != nil {
+		return err
+	}
+	if hasKey == HasNotKey {
+		// 如果没有该数据，查询数据库进行更新
+		var favorite models.Favorite
+		var count int64 // 查看有没有对应的 video-user 对
+		err = DB.Table("favorite").
+			Where("favorite_id = ? AND video_id = ?", userId, videoId).
+			Find(&favorite).
+			Count(&count).
+			Error
+		if err != nil {
+			// 查询失败
+			return err
+		}
+		if count == HasData {
+			// 如果有数据，写入 Redis 中
+			// 数据解析为字符串
+			favoriteVal, err := json.Marshal(favorite)
+			if err != nil {
+				return err
+			}
+			// 更新到 Redis
+			err = RedisDB.HSet("favorite", id, string(favoriteVal)).Err()
+			if err != nil {
+				return err
+			}
+		} else {
+			// 如果不存在，该值设置为 nil
+			err = RedisDB.HSet("favorite", id, "nil").Err()
+			if err != nil {
+				return err
+			}
+		}
+	}
+	// 获取值
+	result, _ := RedisDB.HGet("favorite", id).Result()
+	if result != "" && result != "nil" {
+		// 如果存在该数据，就是关注了
+		*val = true
+	} else {
+		// 如果没有被关注
+		*val = false
 	}
 	return err
 }
@@ -224,7 +344,11 @@ func UpdateVideos(videos []models.Video, id string) error {
 		if err != nil {
 			return err
 		}
-
+		// 更新是否关注
+		err = FindIsFavorite(&videos[i].IsFavorite, id, videoId)
+		if err != nil {
+			return err
+		}
 		// 更新用户信息
 		err = UpdateUser(&videos[i].Author, id)
 		if err != nil {
@@ -249,8 +373,8 @@ func UpdateUsers(users []models.User, id string) error {
 		if err != nil {
 			return err
 		}
-		// 查看是否点赞了
-
+		// 查看是否关注了
+		err = FindIsFollowed(&users[i].IsFollow, id, userId)
 		// 更新粉丝数
 		err = FindRedis(followerKey, &users[i].FollowerCount, userId)
 		if err != nil {
@@ -280,15 +404,7 @@ func UpdateUser(user *models.User, id string) error {
 	if err != nil {
 		return err
 	}
-	// 查看是否点赞了
-	isFollowKey := userId + ":" + id
-	// 读取 Redis 中的该数据
-	isFollow, _ := RedisDB.HGet("favorite", isFollowKey).Result()
-	if userId != id && (isFollow == "nil" || isFollow == "") {
-		// 没有关注
-		user.IsFollow = false
-	} else {
-		user.IsFollow = true
-	}
+	// 查看是否关注了
+	err = FindIsFollowed(&user.IsFollow, id, userId)
 	return nil
 }
