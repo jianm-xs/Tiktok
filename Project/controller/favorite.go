@@ -44,7 +44,7 @@ func FavoriteAction(c *gin.Context) {
 		// 操作失败
 		c.JSON(http.StatusOK, models.Response{
 			StatusCode: -3,
-			StatusMsg:  "update Mysql error!",
+			StatusMsg:  err.Error(),
 		})
 		return
 	}
