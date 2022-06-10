@@ -113,6 +113,10 @@ func updateUserData() error {
 	}
 	var userId, followCount, followerCount int64
 	for field, val := range data {
+		if val == "nil" {
+			// 如果不存在，不管
+			continue
+		}
 		// 获取用户ID
 		userId, err = strconv.ParseInt(field, 10, 64)
 		if err != nil {
@@ -134,6 +138,10 @@ func updateUserData() error {
 		return err
 	}
 	for field, val := range data {
+		if val == "nil" {
+			// 如果不存在，不管
+			continue
+		}
 		// 获取用户ID
 		userId, err = strconv.ParseInt(field, 10, 64)
 		if err != nil {

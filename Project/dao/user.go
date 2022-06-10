@@ -97,9 +97,8 @@ func UserRegister(username string, password string) int64 {
 func GetUserInfo(queryId int64, userId int64) (models.User, error) {
 	var user models.User // 结果
 	// 查询该用户信息
-	DB.Select("user.*, is_follow").
-		// 条件筛选，按 user_id 查找
-		Where("user.user_id = ?", queryId).
+	// 条件筛选，按 user_id 查找
+	DB.Where("user.user_id = ?", queryId).
 		First(&user)
 	// 更新用户信息
 	userIdStr := strconv.FormatInt(userId, 10)

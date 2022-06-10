@@ -94,9 +94,8 @@ func GetFollowList(queryId, userId int64) ([]models.User, error) {
 	var users []models.User // 结果
 	// 查找 queryID 关注的用户
 	err = DB.Debug().Table("follow").
-		Select("user.*").
 		Where("follower_id = ?", queryId).
-		Joins("LEFT JOIN user ON user.user_id = follow.follow_id").
+		Joins("LEFT JOIN user ON user.user_id = follow.user_id").
 		Find(&users).Error
 	if err != nil {
 		// 查询失败，返回错误信息
