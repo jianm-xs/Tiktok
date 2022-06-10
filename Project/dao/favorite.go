@@ -89,8 +89,6 @@ func GetFavoriteList(authorId, userId int64) ([]models.Video, error) {
 		Joins("JOIN (?) AS fa ON fa.video_id = video.video_id", queryFavorite).
 		// 按照点赞时间降序排列，即时间最晚的在前面
 		Order("fa.create_time DESC").
-		// 选择返回的字段, video 表中缺少 comment_count 属性，暂时用0替代
-		Select("video.*, is_favorite, 0 as comment_count").
 		Find(&videos).Error
 	if err != nil {
 		// 如果查询失败，返回错误信息
