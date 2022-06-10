@@ -87,7 +87,7 @@ func GetFavoriteList(authorId, userId int64) ([]models.Video, error) {
 		Preload("Author").
 		Select("video.*").
 		// 联结点赞视频
-		Joins("JOIN (?) AS fa ON fa.video_id = video.video_id", queryFavorite).
+		Joins("LEFT JOIN (?) AS fa ON fa.video_id = video.video_id", queryFavorite).
 		// 按照点赞时间降序排列，即时间最晚的在前面
 		Order("fa.create_time DESC").
 		Find(&videos).Error
