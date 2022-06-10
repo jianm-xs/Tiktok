@@ -24,8 +24,6 @@ func RelationAction(userId, toUserId, actionType int64) error {
 	if userId == toUserId { // 如果是自己对自己操作，不管
 		return errors.New("you cannot operate on yourself")
 	}
-	var count int64 // 查看有没有对应的 user-follower 对
-	_ = DB.Debug().Table("follow").Where("user_id = ? AND follower_id = ?", toUserId, userId).Count(&count).Error
 
 	userIdStr := strconv.FormatInt(userId, 10)
 	toUserIdStr := strconv.FormatInt(toUserId, 10)

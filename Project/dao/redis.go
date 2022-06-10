@@ -519,7 +519,15 @@ func UpdateUsers(users []models.User, id string) error {
 			return err
 		}
 		// 查看是否关注了
-		err = FindIsFollowed(&users[i].IsFollow, id, userId)
+		if id == userId {
+			// 自己默认关注自己
+			users[i].IsFollow = true
+		} else {
+			err = FindIsFollowed(&users[i].IsFollow, id, userId)
+			if err != nil {
+				return err
+			}
+		}
 		// 更新粉丝数
 		err = FindRedis(followerKey, &users[i].FollowerCount, userId)
 		if err != nil {
@@ -544,12 +552,16 @@ func UpdateUser(user *models.User, id string) error {
 	if err != nil {
 		return err
 	}
-	// 更新粉丝数
 	err = FindRedis(followerKey, &user.FollowerCount, userId)
 	if err != nil {
 		return err
 	}
 	// 查看是否关注了
-	err = FindIsFollowed(&user.IsFollow, id, userId)
-	return nil
+	if id == userId {
+		// 自己默认关注自己
+		user.IsFollow = true
+	} else {
+		err = FindIsFollowed(&user.IsFollow, id, userId)
+	}
+	return err
 }
