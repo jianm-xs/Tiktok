@@ -7,7 +7,7 @@ package dao
 import (
 	"Project/models"
 	"Project/utils"
-	"gorm.io/gorm"
+	"strconv"
 	"time"
 )
 
@@ -47,36 +47,21 @@ func GetVideoList(authorId int64, userId int64) ([]models.Video, error) {
 	// 查询结果
 	var videos []models.Video
 
-	// 查询 follow
-	queryFollow := DB.Raw("? UNION ALL ?",
-		DB.Select("? as user_id, 1 as is_follow", userId).Table("follow"),                            // 自己不能关注自己
-		DB.Select("follow.user_id, 1 as is_follow").Where("follower_id = ?", userId).Table("follow"), // 查找当前用户关注的所有用户
-	)
-	// 查询点赞
-	queryFavorite := DB.Select("video_id, 1 as is_favorite").Where("favorite_id = ?", userId).Table("favorite")
-
 	err := DB.Debug().Table("video").
 		// 预加载 User，给 user 表加上 is_follow 字段再查找
-		Preload("Author", func(db *gorm.DB) *gorm.DB {
-			return db.Select("user.*, is_follow").
-				Joins("LEFT JOIN (?) AS fo ON user.user_id = fo.user_id", queryFollow).
-				Table("user")
-		}).
-		// 选择返回的字段
-		Select("video.*, is_favorite").
+		Preload("Author").
 		// 按照创建时间降序排列，即时间最晚的在前面
 		Order("video.create_time DESC").
 		// 筛选条件，作者的 id 为 authorId 之前的视频
 		Where("video.author_id = ? ", authorId).
-		// 联结是否点赞
-		Joins("LEFT JOIN (?) AS fa ON fa.video_id = video.video_id", queryFavorite).
 		Find(&videos).Error
 	if err != nil {
 		// 数据库查询失败，返回错误信息
 		return nil, err
 	}
 	// 使用 Redis 中的数据更新视频信息
-	//err = UpdateVideos(videos[:])
+	userIdStr := strconv.FormatInt(userId, 10)
+	err = UpdateVideos(videos[:], userIdStr)
 	if err != nil {
 		// 如果更新出现问题，返回错误
 		return nil, err
