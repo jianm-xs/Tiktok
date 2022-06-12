@@ -24,6 +24,8 @@ import (
 	"time"
 )
 
+var promise utils.Promise
+
 // Publish 投稿接口
 func Publish(context *gin.Context) {
 	// 获取视频数据
@@ -73,7 +75,12 @@ func Publish(context *gin.Context) {
 	filePath := filepath.Join("upload/videos", "/", saveFileName)
 	coverPath := filepath.Join("upload/images", "/", fileNameStr+".jpeg")
 	// 暂时先保存到 server
-	if err = context.SaveUploadedFile(data, filePath); err != nil {
+	go func() {
+		defer func() {
+			err = context.SaveUploadedFile(data, filePath)
+		}()
+	}()
+	if err != nil {
 		context.JSON(http.StatusOK, models.Response{
 			StatusCode: common.StatusData, // 失败，设置状态码和描述
 			StatusMsg:  err.Error(),
@@ -86,7 +93,11 @@ func Publish(context *gin.Context) {
 	// 获取第一帧
 	err = ffmpeg.Input(filePath).
 		Filter("select", ffmpeg.Args{"gte(n, 1)"}).
-		Output("pipe:", ffmpeg.KwArgs{"vframes": 1, "format": "image2", "vcodec": "mjpeg"}).
+		Output("pipe:", ffmpeg.KwArgs{
+			"vframes": 1,
+			"format":  "image2",
+			"vcodec":  "mjpeg",
+		}).
 		WithOutput(buf, os.Stdout).
 		Run()
 	// 如果获取第一帧失败，设置状态描述
