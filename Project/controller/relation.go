@@ -5,6 +5,7 @@
 package controller
 
 import (
+	"Project/common"
 	"Project/dao"
 	"Project/models"
 	"Project/utils"
@@ -23,8 +24,8 @@ func RelationAction(c *gin.Context) {
 	// 参数获取失败
 	if token == "" || toUserId == -1 || actionType == -1 {
 		c.JSON(http.StatusOK, models.Response{
-			StatusCode: -1,
-			StatusMsg:  "failed to obtain parameters!",
+			StatusCode: common.StatusQuery,
+			StatusMsg:  "获取参数失败",
 		})
 		return
 	}
@@ -32,9 +33,9 @@ func RelationAction(c *gin.Context) {
 	myClaims, err := utils.ParseToken(token)
 	if err != nil { // token 解析失败
 		c.JSON(http.StatusOK, models.Response{
-			StatusCode: -2,
-			StatusMsg:  "token error!",
-		})
+			StatusCode: common.StatusToken, // 失败，设置状态码和描述
+			StatusMsg:  err.Error(),
+		}) // 设置返回的信息
 		return
 	} else { // 如果 token 解析成功，获取 userId
 		userId, _ = strconv.ParseInt(myClaims.Uid, 10, 64)
@@ -44,16 +45,16 @@ func RelationAction(c *gin.Context) {
 	if err != nil {
 		// 操作失败
 		c.JSON(http.StatusOK, models.Response{
-			StatusCode: -3,
+			StatusCode: common.StatusData,
 			StatusMsg:  err.Error(),
 		})
-		return
+	} else {
+		// 操作成功
+		c.JSON(http.StatusOK, models.Response{
+			StatusCode: common.StatusOK,
+			StatusMsg:  "success!",
+		})
 	}
-	// 操作成功
-	c.JSON(http.StatusOK, models.Response{
-		StatusCode: 0,
-		StatusMsg:  "success!",
-	})
 }
 
 // FollowList 关注列表
@@ -70,17 +71,17 @@ func FollowList(c *gin.Context) {
 	}
 	result.UserList, err = dao.GetFollowList(queryId, userId)
 	if err != nil {
-		result.Response.StatusCode = -1 // 查询失败
-		result.Response.StatusMsg = "search error!"
+		result.Response.StatusCode = common.StatusData // 查询失败
+		result.Response.StatusMsg = err.Error()
+	} else {
+		result.Response.StatusCode = common.StatusOK // 成功，设置状态码和描述
+		result.Response.StatusMsg = "success"
 	}
-	result.Response.StatusCode = 0 // 成功，设置状态码和描述
-	result.Response.StatusMsg = "success"
 	c.JSON(http.StatusOK, result) // 设置返回的信息
 }
 
 // FollowerList 粉丝列表
 func FollowerList(c *gin.Context) {
-
 	// 返回的结果
 	var result models.FollowList
 	var queryId, userId int64
@@ -89,8 +90,8 @@ func FollowerList(c *gin.Context) {
 	token := c.DefaultQuery("token", "")
 	// 参数获取失败
 	if queryId == -1 {
-		result.StatusCode = -1
-		result.StatusMsg = "failed to obtain parameters!"
+		result.StatusCode = common.StatusQuery
+		result.StatusMsg = "获取参数失败"
 		result.UserList = nil
 		c.JSON(http.StatusOK, result)
 		return
@@ -109,10 +110,10 @@ func FollowerList(c *gin.Context) {
 	// 获取粉丝列表
 	result.UserList, err = dao.GetFollowerUserList(userId, queryId)
 	if err != nil {
-		result.StatusCode = -2
-		result.StatusMsg = "search databases error!"
+		result.StatusCode = common.StatusData
+		result.StatusMsg = err.Error()
 	} else {
-		result.StatusCode = 0
+		result.StatusCode = common.StatusOK
 		result.StatusMsg = "success!"
 	}
 	c.JSON(http.StatusOK, result)

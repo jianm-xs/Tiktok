@@ -26,14 +26,13 @@ import (
 
 // Publish 投稿接口
 func Publish(context *gin.Context) {
-	var result models.Response
-
 	// 获取视频数据
 	data, err := context.FormFile("data")
 	if err != nil { // 如果获取视频失败，返回信息
-		result.StatusCode = -1
-		result.StatusMsg = "Get video error!"
-		context.JSON(http.StatusBadRequest, result)
+		context.JSON(http.StatusBadRequest, models.Response{
+			StatusCode: common.StatusQuery,
+			StatusMsg:  err.Error(),
+		})
 		return
 	}
 	// TODO: 文件大小限制？
@@ -45,9 +44,10 @@ func Publish(context *gin.Context) {
 	var authorId int64
 	myClaims, err := utils.ParseToken(token)
 	if err != nil { // token 解析失败
-		result.StatusCode = -2              // 失败，设置状态码和描述
-		result.StatusMsg = "token error!"   // token 有误
-		context.JSON(http.StatusOK, result) // 设置返回的信息
+		context.JSON(http.StatusOK, models.Response{
+			StatusCode: common.StatusToken, // 失败，设置状态码和描述
+			StatusMsg:  err.Error(),
+		}) // 设置返回的信息
 		return
 	} else { // 如果 token 解析成功，获取 userId
 		authorId, _ = strconv.ParseInt(myClaims.Uid, 10, 64)
@@ -72,12 +72,12 @@ func Publish(context *gin.Context) {
 
 	filePath := filepath.Join("upload/videos", "/", saveFileName)
 	coverPath := filepath.Join("upload/images", "/", fileNameStr+".jpeg")
-	fmt.Println("=============>", filePath, authorId)
 	// 暂时先保存到 server
-	if err := context.SaveUploadedFile(data, filePath); err != nil {
-		result.StatusCode = -3                 // 失败，设置状态码和描述
-		result.StatusMsg = "save video error!" // token 有误
-		context.JSON(http.StatusOK, result)    // 设置返回的信息
+	if err = context.SaveUploadedFile(data, filePath); err != nil {
+		context.JSON(http.StatusOK, models.Response{
+			StatusCode: common.StatusData, // 失败，设置状态码和描述
+			StatusMsg:  err.Error(),
+		}) // 设置返回的信息
 		return
 	}
 
@@ -91,25 +91,28 @@ func Publish(context *gin.Context) {
 		Run()
 	// 如果获取第一帧失败，设置状态描述
 	if err != nil {
-		result.StatusCode = -4 // 失败，设置状态码和描述
-		result.StatusMsg = "get the cover image error!"
-		context.JSON(http.StatusOK, result) // 设置返回的信息
+		context.JSON(http.StatusOK, models.Response{
+			StatusCode: common.StatusData, // 失败，设置状态码和描述
+			StatusMsg:  err.Error(),
+		}) // 设置返回的信息
 		return
 	}
 	// 创建图片
 	img, err := imaging.Decode(buf)
 	if err != nil {
-		result.StatusCode = -4 // 失败，设置状态码和描述
-		result.StatusMsg = "get the cover image error!"
-		context.JSON(http.StatusOK, result) // 设置返回的信息
+		context.JSON(http.StatusOK, models.Response{
+			StatusCode: common.StatusData, // 失败，设置状态码和描述
+			StatusMsg:  err.Error(),
+		}) // 设置返回的信息
 		return
 	}
 	// 保存图片
 	err = imaging.Save(img, coverPath)
 	if err != nil {
-		result.StatusCode = -4 // 失败，设置状态码和描述
-		result.StatusMsg = "get the cover image error!"
-		context.JSON(http.StatusOK, result) // 设置返回的信息
+		context.JSON(http.StatusOK, models.Response{
+			StatusCode: common.StatusData, // 失败，设置状态码和描述
+			StatusMsg:  err.Error(),
+		}) // 设置返回的信息
 		return
 	}
 
@@ -121,40 +124,40 @@ func Publish(context *gin.Context) {
 
 	err = dao.CreateVideoByData(title, authorId, playUrl, coverUrl)
 	if err != nil { // 如果发布失败，返回信息
-		result.StatusCode = -5                        // 失败，设置状态码和描述
-		result.StatusMsg = "Insert into Mysql error!" // token 有误
-		context.JSON(http.StatusOK, result)           // 设置返回的信息
-		return
+		context.JSON(http.StatusOK, models.Response{
+			StatusCode: common.StatusData, // 失败，设置状态码和描述
+			StatusMsg:  err.Error(),
+		}) // 设置返回的信息
+	} else {
+		// 发布成功
+		context.JSON(http.StatusOK, &models.Response{
+			StatusCode: common.StatusOK,
+			StatusMsg:  "success",
+		})
 	}
-
-	// 发布成功
-	context.JSON(http.StatusOK, &models.Response{
-		StatusCode: common.StatusOK,
-		StatusMsg:  "success",
-	})
 }
 
 // PublishList 视频发布列表
 func PublishList(c *gin.Context) {
-	// 返回的结果
-	var result models.VideoListResponse
 	// 获取请求的 token
 	token := c.DefaultQuery("token", "")
 	// 获取作者的 id
 	authorId, err := strconv.ParseInt(c.DefaultQuery("user_id", "-1"), 10, 64)
 	if err != nil {
-		result.StatusCode = -1
-		result.StatusMsg = "get author id error!"
-		c.JSON(http.StatusOK, result)
+		c.JSON(http.StatusOK, models.Response{
+			StatusCode: common.StatusQuery, // 失败，设置状态码和描述
+			StatusMsg:  err.Error(),
+		}) // 设置返回的信息
 		return
 	}
 	// 获取当前用户的 id
 	var userId int64
 	myClaims, err := utils.ParseToken(token)
 	if err != nil { // token 解析失败
-		result.StatusCode = -2            // 失败，设置状态码和描述
-		result.StatusMsg = "token error!" // token 有误
-		c.JSON(http.StatusOK, result)     // 设置返回的信息
+		c.JSON(http.StatusOK, models.Response{
+			StatusCode: common.StatusToken, // 失败，设置状态码和描述
+			StatusMsg:  err.Error(),
+		}) // 设置返回的信息
 		return
 	} else { // 如果 token 解析成功，获取 userId
 		userId, _ = strconv.ParseInt(myClaims.Uid, 10, 64)
@@ -165,8 +168,8 @@ func PublishList(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusOK, models.VideoListResponse{
 			Response: models.Response{
-				StatusCode: 0,
-				StatusMsg:  "search databases error",
+				StatusCode: common.StatusData,
+				StatusMsg:  err.Error(),
 			},
 			VideoList: videos,
 		})
@@ -174,11 +177,10 @@ func PublishList(c *gin.Context) {
 		//接口返回
 		c.JSON(http.StatusOK, models.VideoListResponse{
 			Response: models.Response{
-				StatusCode: 0,
+				StatusCode: common.StatusOK,
 				StatusMsg:  "success!",
 			},
 			VideoList: videos,
 		})
 	}
-
 }
