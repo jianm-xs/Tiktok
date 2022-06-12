@@ -5,6 +5,7 @@
 package controller
 
 import (
+	"Project/common"
 	"Project/dao"
 	"Project/models"
 	"Project/utils"
@@ -40,14 +41,14 @@ func Feed(c *gin.Context) {
 	}
 	result.VideoList, err = dao.GetVideos(lastTime, userId) // 执行数据库查询，获取结果
 	if err != nil {
-		result.Response.StatusCode = -1 // 成功，设置状态码和描述
+		result.Response.StatusCode = common.StatusData // 成功，设置状态码和描述
 		result.Response.StatusMsg = err.Error()
 		if len(result.VideoList) > 0 { // 如果有返回视频，更新 nextTime。方便下次获取视频列表时使用
 			length := len(result.VideoList)                                // 获取视频数
 			result.NextTime = result.VideoList[length-1].CreateTime.Unix() // 获取最后一个视频的时间，转为 int
 		}
 	} else {
-		result.Response.StatusCode = 0 // 成功，设置状态码和描述
+		result.Response.StatusCode = common.StatusOK // 成功，设置状态码和描述
 		result.Response.StatusMsg = "success"
 		if len(result.VideoList) > 0 { // 如果有返回视频，更新 nextTime。方便下次获取视频列表时使用
 			length := len(result.VideoList)                                // 获取视频数

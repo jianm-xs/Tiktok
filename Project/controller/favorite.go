@@ -5,6 +5,7 @@
 package controller
 
 import (
+	"Project/common"
 	"Project/dao"
 	"Project/models"
 	"Project/utils"
@@ -22,8 +23,8 @@ func FavoriteAction(c *gin.Context) {
 	// 参数获取失败
 	if token == "" || videoId == -1 || actionType == -1 {
 		c.JSON(http.StatusOK, models.Response{
-			StatusCode: -1,
-			StatusMsg:  "failed to obtain parameters!",
+			StatusCode: common.StatusQuery,
+			StatusMsg:  "获取参数失败",
 		})
 		return
 	}
@@ -31,8 +32,8 @@ func FavoriteAction(c *gin.Context) {
 	myClaims, err := utils.ParseToken(token)
 	if err != nil { // token 解析失败
 		c.JSON(http.StatusOK, models.Response{
-			StatusCode: -2,
-			StatusMsg:  "token error!",
+			StatusCode: common.StatusToken,
+			StatusMsg:  err.Error(),
 		})
 		return
 	} else { // 如果 token 解析成功，获取 userId
@@ -43,14 +44,14 @@ func FavoriteAction(c *gin.Context) {
 	if err != nil {
 		// 操作失败
 		c.JSON(http.StatusOK, models.Response{
-			StatusCode: -3,
+			StatusCode: common.StatusData,
 			StatusMsg:  err.Error(),
 		})
 		return
 	}
 	// 操作成功
 	c.JSON(http.StatusOK, models.Response{
-		StatusCode: 0,
+		StatusCode: common.StatusOK,
 		StatusMsg:  "success!",
 	})
 }
@@ -65,8 +66,8 @@ func FavoriteList(c *gin.Context) {
 	if uid == -1 || token == "" {
 		c.JSON(http.StatusOK, models.VideoListResponse{
 			Response: models.Response{
-				StatusCode: -1,
-				StatusMsg:  "failed to obtain parameters!"},
+				StatusCode: common.StatusQuery,
+				StatusMsg:  "获取参数失败"},
 			VideoList: nil,
 		})
 		return
@@ -75,8 +76,8 @@ func FavoriteList(c *gin.Context) {
 	myClaims, err := utils.ParseToken(token)
 	if err != nil { // token 解析失败
 		c.JSON(http.StatusOK, models.Response{
-			StatusCode: -2,
-			StatusMsg:  "token error!",
+			StatusCode: common.StatusToken,
+			StatusMsg:  err.Error(),
 		})
 		return
 	} else { // 如果 token 解析成功，获取 userId
@@ -88,17 +89,16 @@ func FavoriteList(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusOK, models.VideoListResponse{
 			Response: models.Response{
-				StatusCode: -2,
-				StatusMsg:  "select databases error"},
+				StatusCode: common.StatusData,
+				StatusMsg:  err.Error()},
 			VideoList: videos,
 		})
 	} else {
 		c.JSON(http.StatusOK, models.VideoListResponse{
 			Response: models.Response{
-				StatusCode: 0,
+				StatusCode: http.StatusOK,
 				StatusMsg:  "success!"},
 			VideoList: videos,
 		})
 	}
-	return
 }

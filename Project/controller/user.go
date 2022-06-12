@@ -5,6 +5,7 @@
 package controller
 
 import (
+	"Project/common"
 	"Project/dao"
 	"Project/models"
 	"Project/utils"
@@ -28,8 +29,8 @@ func Login(c *gin.Context) {
 	err := dao.UserLogin(&result.UserID, userName, userPassword)
 	if err != nil {
 		// 用户名和密码匹配不成功，则返回错误信息
-		result.StatusCode = -1
-		result.StatusMsg = "用户名或密码错误!"
+		result.StatusCode = common.StatusData
+		result.StatusMsg = err.Error()
 		c.JSON(http.StatusOK, result)
 		return
 	}
@@ -37,14 +38,14 @@ func Login(c *gin.Context) {
 	result.Token, err = utils.GenToken(strconv.FormatInt(result.UserID, 10))
 	if err != nil {
 		// 生成 token 失败，则返回错误信息
-		result.StatusCode = -2
-		result.StatusMsg = "Get token error!"
+		result.StatusCode = common.StatusData
+		result.StatusMsg = err.Error()
 		c.JSON(http.StatusOK, result)
 		return
 	}
 	//用户名和密码同时匹配成功，且 token 生成成功。返回 id 和 token
-	result.StatusCode = 0
-	result.StatusMsg = "成功！"
+	result.StatusCode = common.StatusOK
+	result.StatusMsg = "success"
 	c.JSON(http.StatusOK, result)
 }
 
@@ -56,8 +57,8 @@ func Register(c *gin.Context) {
 	// 查询数据库中 username 是否存在，不存在创建新用户返回 id
 	uid := dao.UserRegister(username, password)
 	if uid == -1 { // 注册失败
-		result.Response.StatusCode = -1
-		result.Response.StatusMsg = "注册失败！"
+		result.Response.StatusCode = common.StatusData
+		result.Response.StatusMsg = "注册失败"
 		result.UserID = uid
 		result.Token = ""
 		c.JSON(http.StatusOK, result)
@@ -66,8 +67,8 @@ func Register(c *gin.Context) {
 	// 生成token
 	tokenStr, _ := utils.GenToken(strconv.FormatInt(uid, 10))
 
-	result.Response.StatusCode = 0
-	result.Response.StatusMsg = "成功！"
+	result.Response.StatusCode = common.StatusOK
+	result.Response.StatusMsg = "success！"
 	result.UserID = uid
 	result.Token = tokenStr
 	c.JSON(http.StatusOK, result)
@@ -89,11 +90,11 @@ func UserInfo(c *gin.Context) {
 	// 数据库查询结果，获取用户信息
 	result.User, err = dao.GetUserInfo(queryId, userId)
 	if err != nil {
-		result.StatusCode = -2
-		result.StatusMsg = "获取用户信息失败!"
+		result.StatusCode = common.StatusData
+		result.StatusMsg = err.Error()
 	} else {
-		result.StatusCode = 0
-		result.StatusMsg = "成功！"
+		result.StatusCode = common.StatusOK
+		result.StatusMsg = "success!"
 	}
 	c.JSON(http.StatusOK, result) // 设置返回的信息
 }
