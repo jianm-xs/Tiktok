@@ -14,6 +14,7 @@
 - [Go1.18](https://golang.google.cn/)
 - [MySQL](https://www.mysql.com/)
 - [Git](https://git-scm.com/)
+- [Redis](https://redis.io/)
 
 ##### 安装步骤
 
