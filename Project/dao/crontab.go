@@ -9,8 +9,8 @@ import (
 	"Project/models"
 	"encoding/json"
 	"github.com/robfig/cron/v3"
-	"gorm.io/gorm/clause"
 	"strconv"
+	"strings"
 )
 
 // InitTimerTask 初始化定时器并启动
@@ -46,7 +46,8 @@ func updateFollowData() error {
 		// 如果获取失败，返回错误
 		return err
 	}
-	for _, val := range data {
+	for field, val := range data {
+		ids := strings.Split(field, ":")
 		if val != "nil" {
 			// 当前关注记录有效，插入到数据库
 			// 插入即可
@@ -55,17 +56,27 @@ func updateFollowData() error {
 			if err != nil {
 				return err
 			}
-			// 如果存在，更新 create_time， 如果不存在。插入关注记录。按照 ID 查找
-			err = DB.Clauses(clause.OnConflict{
-				Columns:   []clause.Column{{Name: "id"}},
-				DoUpdates: clause.AssignmentColumns([]string{"create_time"}),
-			}).Create(&follow).Error
+			// 如果不存在。插入关注记录。按照 ID 查找
+			var count int64
+			// 查询是否有该数据
+			err = DB.Table("follow").
+				Where("follower_id=? AND user_id=?", ids[0], ids[1]).
+				Count(&count).Error
+			if err != nil {
+				return err
+			}
+			if count == 0 {
+				// 如果没有该数据，插入数据。如果有该数据，不管
+				err = DB.Create(&follow).Error
+			}
 			if err != nil {
 				// 如果插入失败，返回错误
 				return err
 			}
+		} else {
+			// 如果没有，数据库中删除这条数据
+			DB.Where("follower_id=? AND user_id=?", ids[0], ids[1]).Delete(models.Favorite{})
 		}
-		// 如果 val == nil 说明当前关注记录已经被删除了，不需要进行操作
 	}
 	return nil
 }
@@ -79,7 +90,8 @@ func updateFavoriteData() error {
 		// 如果获取失败，返回错误
 		return err
 	}
-	for _, val := range data {
+	for field, val := range data {
+		ids := strings.Split(field, ":")
 		if val != "nil" {
 			// 当前点赞记录有效，插入到数据库
 			var favorite models.Favorite
@@ -87,14 +99,25 @@ func updateFavoriteData() error {
 			if err != nil {
 				return err
 			}
-			// 如果存在，更新 create_time， 如果不存在。插入关注记录。按照 ID 查找
-			err = DB.Clauses(clause.OnConflict{
-				Columns:   []clause.Column{{Name: "id"}},
-				DoUpdates: clause.AssignmentColumns([]string{"create_time"}),
-			}).Create(&favorite).Error
+			// 如果不存在。插入关注记录。按照 ID 查找
+			var count int64
+			// 查询是否有该数据
+			err = DB.Table("favorite").
+				Where("favorite_id=? AND video_id=?", ids[0], ids[1]).
+				Count(&count).Error
+			if err != nil {
+				return err
+			}
+			if count == 0 {
+				// 如果没有该数据，插入数据。如果有该数据，不管
+				err = DB.Create(&favorite).Error
+			}
 			if err != nil { // 数据写入失败
 				return err
 			}
+		} else {
+			// 如果没有，数据库中删除这条数据
+			DB.Where("favorite_id=? AND video_id=?", ids[0], ids[1]).Delete(models.Favorite{})
 		}
 		// 如果 val == nil 说明当前点赞记录已经被删除了，不需要进行操作
 	}
