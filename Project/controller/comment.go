@@ -54,7 +54,7 @@ func CommentAction(c *gin.Context) {
 	c.JSON(http.StatusOK, models.CommentActionResponse{
 		Response: models.Response{
 			StatusCode: 0,
-			StatusMsg:  "success!",
+			StatusMsg:  "成功！",
 		},
 		Comment: models.Comment{
 			ID:         comment.ID,
@@ -76,7 +76,7 @@ func CommentList(c *gin.Context) {
 	video_id, err := strconv.ParseInt(c.DefaultQuery("video_id", "-1"), 10, 64)
 	if err != nil { // 获取视频 id 错误
 		result.Response.StatusCode = -1
-		result.Response.StatusMsg = "git video_id error!"
+		result.Response.StatusMsg = "获取视频失败!"
 		c.JSON(http.StatusOK, result)
 		return
 	}
@@ -103,7 +103,7 @@ func CommentList(c *gin.Context) {
 	}
 	result.Response = models.Response{
 		StatusCode: 0,
-		StatusMsg:  "success",
+		StatusMsg:  "成功！",
 	}
 	c.JSON(http.StatusOK, result)
 }

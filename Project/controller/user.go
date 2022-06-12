@@ -29,7 +29,7 @@ func Login(c *gin.Context) {
 	if err != nil {
 		// 用户名和密码匹配不成功，则返回错误信息
 		result.StatusCode = -1
-		result.StatusMsg = "username or password error!"
+		result.StatusMsg = "用户名或密码错误!"
 		c.JSON(http.StatusOK, result)
 		return
 	}
@@ -44,7 +44,7 @@ func Login(c *gin.Context) {
 	}
 	//用户名和密码同时匹配成功，且 token 生成成功。返回 id 和 token
 	result.StatusCode = 0
-	result.StatusMsg = "success"
+	result.StatusMsg = "成功！"
 	c.JSON(http.StatusOK, result)
 }
 
@@ -57,7 +57,7 @@ func Register(c *gin.Context) {
 	uid := dao.UserRegister(username, password)
 	if uid == -1 { // 注册失败
 		result.Response.StatusCode = -1
-		result.Response.StatusMsg = "fail to register！"
+		result.Response.StatusMsg = "注册失败！"
 		result.UserID = uid
 		result.Token = ""
 		c.JSON(http.StatusOK, result)
@@ -67,7 +67,7 @@ func Register(c *gin.Context) {
 	tokenStr, _ := utils.GenToken(strconv.FormatInt(uid, 10))
 
 	result.Response.StatusCode = 0
-	result.Response.StatusMsg = "success！"
+	result.Response.StatusMsg = "成功！"
 	result.UserID = uid
 	result.Token = tokenStr
 	c.JSON(http.StatusOK, result)
@@ -90,10 +90,10 @@ func UserInfo(c *gin.Context) {
 	result.User, err = dao.GetUserInfo(queryId, userId)
 	if err != nil {
 		result.StatusCode = -2
-		result.StatusMsg = "search databases error!"
+		result.StatusMsg = "获取用户信息失败!"
 	} else {
 		result.StatusCode = 0
-		result.StatusMsg = "success!"
+		result.StatusMsg = "成功！"
 	}
 	c.JSON(http.StatusOK, result) // 设置返回的信息
 }
