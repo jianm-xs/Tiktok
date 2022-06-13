@@ -29,7 +29,7 @@ func Publish(context *gin.Context) {
 	// 获取视频数据
 	data, err := context.FormFile("data")
 	if err != nil { // 如果获取视频失败，返回信息
-		context.JSON(http.StatusBadRequest, models.Response{
+		context.JSON(http.StatusOK, models.Response{
 			StatusCode: common.StatusQuery,
 			StatusMsg:  err.Error(),
 		})
