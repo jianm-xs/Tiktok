@@ -75,9 +75,11 @@ func FavoriteList(c *gin.Context) {
 	var userId int64
 	myClaims, err := utils.ParseToken(token)
 	if err != nil { // token 解析失败
-		c.JSON(http.StatusOK, models.Response{
-			StatusCode: common.StatusToken,
-			StatusMsg:  err.Error(),
+		c.JSON(http.StatusOK, models.VideoListResponse{
+			Response: models.Response{
+				StatusCode: common.StatusToken,
+				StatusMsg:  err.Error()},
+			VideoList: videos,
 		})
 		return
 	} else { // 如果 token 解析成功，获取 userId

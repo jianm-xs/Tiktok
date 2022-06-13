@@ -144,20 +144,24 @@ func PublishList(c *gin.Context) {
 	// 获取作者的 id
 	authorId, err := strconv.ParseInt(c.DefaultQuery("user_id", "-1"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusOK, models.Response{
-			StatusCode: common.StatusQuery, // 失败，设置状态码和描述
-			StatusMsg:  err.Error(),
-		}) // 设置返回的信息
+		c.JSON(http.StatusOK, models.VideoListResponse{
+			Response: models.Response{
+				StatusCode: common.StatusQuery,
+				StatusMsg:  err.Error(),
+			},
+		})
 		return
 	}
 	// 获取当前用户的 id
 	var userId int64
 	myClaims, err := utils.ParseToken(token)
 	if err != nil { // token 解析失败
-		c.JSON(http.StatusOK, models.Response{
-			StatusCode: common.StatusToken, // 失败，设置状态码和描述
-			StatusMsg:  err.Error(),
-		}) // 设置返回的信息
+		c.JSON(http.StatusOK, models.VideoListResponse{
+			Response: models.Response{
+				StatusCode: common.StatusToken,
+				StatusMsg:  err.Error(),
+			},
+		})
 		return
 	} else { // 如果 token 解析成功，获取 userId
 		userId, _ = strconv.ParseInt(myClaims.Uid, 10, 64)
