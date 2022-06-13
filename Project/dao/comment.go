@@ -172,7 +172,7 @@ func GetCommentList(userId, videoId int64) ([]models.Comment, error) {
 		// 按照创建时间降序排列，即时间最晚的在前面
 		Order("comment.create_time DESC").
 		// 筛选条件，video_id
-		Where("comment.video_id = ?", videoId).
+		Where("comment.video_id = ? AND is_delete=0", videoId).
 		Find(&comments).Error
 	if err != nil { // 查询出错
 		return nil, err
