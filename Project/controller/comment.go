@@ -43,7 +43,7 @@ func CommentAction(c *gin.Context) {
 		q.CommentID,
 	)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, models.Response{
+		c.JSON(http.StatusOK, models.Response{
 			StatusCode: common.StatusData, // 对数据操作失败
 			StatusMsg:  err.Error(),
 		})
@@ -74,7 +74,7 @@ func CommentList(c *gin.Context) {
 	token := c.DefaultQuery("token", "")
 	videoId, err := strconv.ParseInt(c.DefaultQuery("video_id", "-1"), 10, 64)
 	if err != nil { // 获取视频 id 错误
-		c.JSON(http.StatusBadRequest, models.Response{
+		c.JSON(http.StatusOK, models.Response{
 			StatusCode: common.StatusQuery, // 获取参数失败
 			StatusMsg:  err.Error(),
 		})
@@ -85,7 +85,7 @@ func CommentList(c *gin.Context) {
 	var userId int64
 	myClaims, err := utils.ParseToken(token)
 	if err != nil { // token 解析失败
-		c.JSON(http.StatusBadRequest, models.Response{
+		c.JSON(http.StatusOK, models.Response{
 			StatusCode: common.StatusToken, // Token 解析失败
 			StatusMsg:  err.Error(),
 		})
@@ -103,7 +103,7 @@ func CommentList(c *gin.Context) {
 		c.JSON(http.StatusOK, result)
 		return
 	}
-	c.JSON(http.StatusBadRequest, models.Response{
+	c.JSON(http.StatusOK, models.Response{
 		StatusCode: common.StatusOK,
 		StatusMsg:  "success!",
 	})
