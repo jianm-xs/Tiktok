@@ -19,9 +19,15 @@
 ##### 安装步骤
 
 1. clone 本项目：`git clone https://github.com/jianm-xs/Tiktok.git `
-2. 进入项目：`cd Tiktok/Project`
-3. 编译项目：`go build`
-4. 运行项目：`./Project`
+2. 建立数据库，运行 `数据库文件/Tiktok.sql` 文件
+3. 进入项目：`cd Tiktok/Project`
+4. 修改项目配置：`vim /config/config.go`
+   - 修改 `MysqlCfg` 为自己的数据库信息
+   - 修改 `RedisCfg` 为自己的 Redis 信息
+   - 修改 `ServerHost` 为自己的服务器地址（用于访问上传的文件）
+   - 修改 `ServerPort` 为自己的服务端口
+5. 编译项目：`go build`
+6. 运行项目：`./Project`
 
 ##### App 端
 
@@ -56,6 +62,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable -->
+
 <table>
   <tr>
     <td align="center"><a href="https://github.com/jianm-xs"><img src="https://avatars.githubusercontent.com/u/69761545?v=4?s=100" width="100px;" alt=""/><br /><sub><b>jianm-xs</b></sub></a><br /><a href="https://github.com/jianm-xs/Tiktok/commits?author=jianm-xs" title="Documentation">📖</a> <a href="#tutorial-jianm-xs" title="Tutorials">✅</a> <a href="#business-jianm-xs" title="Business development">💼</a> <a href="https://github.com/jianm-xs/Tiktok/commits?author=jianm-xs" title="Code">💻</a> <a href="#projectManagement-jianm-xs" title="Project Management">📆</a> <a href="https://github.com/jianm-xs/Tiktok/issues?q=author%3Ajianm-xs" title="Bug reports">🐛</a> <a href="#question-jianm-xs" title="Answering Questions">💬</a></td>
